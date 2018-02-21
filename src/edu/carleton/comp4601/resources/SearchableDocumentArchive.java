@@ -65,49 +65,49 @@ public class SearchableDocumentArchive {
 
 			return "new Document entered";
 		}
-		@Path("delete")
-		@GET
-		@Produces(MediaType.TEXT_PLAIN)
-		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-		public String delete(@FormParam("tags") ArrayList<String> tags,
-				@Context HttpServletResponse servletResponse) throws IOException {
-			
-			ArrayList<Document> docs=Documents.getInstance().searchForDocs(tags, false);
-			for(Document d :docs){
-				Documents.getInstance().close(d.getId());
-			}
-			return "Files deleted";
-			
-		}
-		@Path("search")
-		@GET
-		@Produces(MediaType.TEXT_PLAIN)
-		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-		public String search(@FormParam("tags") ArrayList<String> tags,
-				@Context HttpServletResponse servletResponse) throws IOException {
-			
-			ArrayList<Document> docs=Documents.getInstance().searchForDocs(tags, true);
-			String docstring="";
-			for(Document d :docs){
-				docstring+=d.getName()+"\n";
-			}
-			return docstring;
-			
-		}
-		@Path("documents")
-		@GET
-		@Produces(MediaType.TEXT_PLAIN)
-		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-		public String documents(@FormParam("tags") ArrayList<String> tags,
-				@Context HttpServletResponse servletResponse) throws IOException {
-			ArrayList<Document> docs= (ArrayList<Document>) Documents.getInstance().getDocs().values();
-			
-			String docstring="";
-			for(Document d :docs){
-				docstring+=d.getName()+"\n";
-			}
-			return docstring; // this can be put in html and xml
-			
-		}
+//		@Path("delete")
+//		@GET
+//		@Produces(MediaType.TEXT_PLAIN)
+//		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+//		public String delete(@FormParam("tags") ArrayList<String> tags,
+//				@Context HttpServletResponse servletResponse) throws IOException {
+//			
+//			ArrayList<Document> docs=Documents.getInstance().searchForDocs(tags, false);
+//			for(Document d :docs){
+//				Documents.getInstance().close(d.getId());
+//			}
+//			return "Files deleted";
+//			
+//		}
+//		@Path("search")
+//		@GET
+//		@Produces(MediaType.TEXT_PLAIN)
+//		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+//		public String search(@FormParam("tags") ArrayList<String> tags,
+//				@Context HttpServletResponse servletResponse) throws IOException {
+//			
+//			ArrayList<Document> docs=Documents.getInstance().searchForDocs(tags, true);
+//			String docstring="";
+//			for(Document d :docs){
+//				docstring+=d.getName()+"\n";
+//			}
+//			return docstring;
+//			
+//		}
+//		@Path("documents")
+//		@GET
+//		@Produces(MediaType.TEXT_PLAIN)
+//		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+//		public String documents(@FormParam("tags") ArrayList<String> tags,
+//				@Context HttpServletResponse servletResponse) throws IOException {
+//			ArrayList<Document> docs= (ArrayList<Document>) Documents.getInstance().getDocs().values();
+//			
+//			String docstring="";
+//			for(Document d :docs){
+//				docstring+=d.getName()+"\n";
+//			}
+//			return docstring; // this can be put in html and xml
+//			
+//		}
 		
 }
