@@ -4,6 +4,24 @@
   <artifactId>COMP4601-SDA</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>war</packaging>
+    <dependencies>
+		<dependency>
+    		<groupId>org.mongodb</groupId>
+    		<artifactId>mongo-java-driver</artifactId>
+    		<version>2.11.3</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/javax.ws.rs/javax.ws.rs-api -->
+		<dependency>
+    		<groupId>javax.ws.rs</groupId>
+    		<artifactId>javax.ws.rs-api</artifactId>
+    		<version>2.1</version>
+		</dependency>
+		<dependency>
+        	<groupId>edu.uci.ics</groupId>
+        	<artifactId>crawler4j</artifactId>
+        	<version>4.3</version>
+   		</dependency>
+  	</dependencies>
   <build>
     <sourceDirectory>src</sourceDirectory>
     <plugins>
