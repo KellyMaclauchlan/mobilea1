@@ -22,7 +22,7 @@ import com.mongodb.MongoClient;
 
 
 import edu.carleton.comp4601.dao.Document;
-import edu.carleton.comp4601.dao.DocumentCollection;
+import edu.carleton.comp4601.dao.Documents;
 
 public class Action {
 	@Context
@@ -42,7 +42,7 @@ public class Action {
 	@GET
 	@Produces(MediaType.APPLICATION_XML)
 	public Document getDocumentXML() {
-		Document d = DocumentCollection.getInstance().find(new Integer(id));
+		Document d = Documents.getInstance().find(new Integer(id));
 		if (d == null) {
 			throw new RuntimeException("No such Documnet: " + id);
 		}
@@ -52,7 +52,7 @@ public class Action {
 	@GET
 	@Produces(MediaType.TEXT_HTML)
 	public String getDocumentHTML() {
-		Document d = DocumentCollection.getInstance().find(new Integer(id));
+		Document d = Documents.getInstance().find(new Integer(id));
 		if (d == null) {
 			throw new RuntimeException("No such Documnet: " + id);
 		}
@@ -68,7 +68,7 @@ public class Action {
 	
 	private Response putAndGetResponse(Document document) {
 		Response res; 
-		Document docFound = DocumentCollection.getInstance().find(new Integer(id));
+		Document docFound = Documents.getInstance().find(new Integer(id));
 		if(docFound !=null){
 			res = Response.ok().build();
 		}else {
@@ -76,7 +76,7 @@ public class Action {
 			
 		}
 		
-		DocumentCollection.getInstance().getDocs().put(document.getId(), document);
+		Documents.getInstance().getDocs().put(document.getId(), document);
 		
 //		MongoClient mongoClient;
 //		try {
@@ -132,7 +132,7 @@ public class Action {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
-		if (!DocumentCollection.getInstance().close(new Integer(id)))
+		if (!Documents.getInstance().close(new Integer(id)))
 			throw new RuntimeException("Document " + id + " not found");
 	}
 }

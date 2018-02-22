@@ -18,6 +18,7 @@ import javax.ws.rs.core.UriInfo;
 
 
 import edu.carleton.comp4601.dao.Document;
+import edu.carleton.comp4601.dao.DocumentCollection;
 import edu.carleton.comp4601.dao.Documents;
 
 
@@ -35,7 +36,7 @@ public class SearchableDocumentArchive {
 		public SearchableDocumentArchive() {
 			name = "COMP4601 Searchable Document Archive V2.1: Brittny Lapierre and Kelly Maclauchlan";
 			//put in call to db to get accounts and put into the list 
-			Documents.getInstance();
+			//DocumentCollection.getInstance();
 		}
 		@GET
 		@Produces(MediaType.TEXT_HTML)
