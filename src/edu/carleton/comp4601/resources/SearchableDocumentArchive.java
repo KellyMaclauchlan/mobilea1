@@ -43,6 +43,19 @@ public class SearchableDocumentArchive {
 			return "<html> " + "<title>" + name + "</title>" + "<body><h1>" + name
 					+ "</body></h1>" + "</html> ";
 		}
+		@Path("crawl")
+		@GET
+		@Produces(MediaType.TEXT_HTML)
+		public String crawl() {
+			try {
+				Controller.startCrawler();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + name
+					+ "</body></h1>" + "</html> ";
+		}
 
 		@POST
 		@Produces(MediaType.TEXT_PLAIN)
@@ -65,6 +78,7 @@ public class SearchableDocumentArchive {
 
 			return "new Document entered";
 		}
+		
 //		@Path("delete")
 //		@GET
 //		@Produces(MediaType.TEXT_PLAIN)
