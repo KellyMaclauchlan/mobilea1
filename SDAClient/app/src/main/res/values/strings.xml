@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">SDAClient</string>
+    <string name="action_settings">Settings</string>
+    <string-array name="endpoints_array">
+        <item>View Document</item>
+        <item>Delete Document</item>
+        <item>New Document</item>
+        <item>Delete By Tags</item>
+        <item>List All Documents</item>
+        <item>Search</item>
+        <item>Reset</item>
+        <item>List</item>
+        <item>PageRank</item>
+        <item>Boost</item>
+        <item>Update</item>
+    </string-array>
+</resources>
