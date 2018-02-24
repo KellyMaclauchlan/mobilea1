@@ -16,6 +16,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.UriInfo;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.MongoClient;
 
 import edu.carleton.comp4601.dao.Document;
 import edu.carleton.comp4601.dao.Documents;
@@ -43,6 +49,7 @@ public class SearchableDocumentArchive {
 			return "<html> " + "<title>" + name + "</title>" + "<body><h1>" + name
 					+ "</body></h1>" + "</html> ";
 		}
+		
 		@Path("crawl")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
@@ -56,6 +63,34 @@ public class SearchableDocumentArchive {
 			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + name
 					+ "</body></h1>" + "</html> ";
 		}
+		
+		
+		@Path("view")
+		@GET
+		@Produces(MediaType.TEXT_HTML)
+		public String viewGraph(){
+			String content = "none";
+			try {
+				MongoClient mongoClient = new MongoClient("localhost", 27017);
+				Graph graph = new Graph();
+				DB database = mongoClient.getDB("aone");
+				DBCollection collectionGraph = database.getCollection("graphs");
+				DBCursor cursor = collectionGraph.find().sort(new BasicDBObject("_id", -1)).limit(1);
+				 if( cursor.hasNext() ){
+					 BasicDBObject obj = (BasicDBObject) cursor.next();
+					 //deserializeObject(byte[] data)
+					 graph = (Graph) Marshaller.deserializeObject((byte[]) obj.get("graph"));
+				 	 content = graph.toString();
+				 	 System.out.println(content);
+				 }
+				     
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return "<html> " + "<title>" + "no" + "</title>" + "<body>"+content+"</body>" + "</html> ";
+		}
+		
 
 		@POST
 		@Produces(MediaType.TEXT_PLAIN)
@@ -78,6 +113,7 @@ public class SearchableDocumentArchive {
 
 			return "new Document entered";
 		}
+		
 		
 //		@Path("delete")
 //		@GET

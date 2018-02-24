@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.jgrapht.graph.AbstractGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.Multigraph; 
 import org.jsoup.Jsoup;
@@ -42,6 +43,7 @@ import edu.uci.ics.crawler4j.url.WebURL;
 public class MyCrawler extends WebCrawler {
 	Graph graph;
 	MongoClient mongoClient;
+	
 	public MyCrawler() {
 		super();
 		graph = new Graph();
@@ -215,6 +217,7 @@ public class MyCrawler extends WebCrawler {
      				newDoc.put("graph", g);
      				newDoc.put("url",cp.getUrl());
      				collectionGraph.insert(newDoc);
+     	            System.out.println("GRAPH: " + graph.toString());
      				
      			} catch (IOException e) {
      				// TODO Auto-generated catch block
