@@ -16,7 +16,7 @@ public class Controller {
 	        CrawlConfig config = new CrawlConfig();
 	       
 	        config.setCrawlStorageFolder(crawlStorageFolder);
-	        config.setMaxPagesToFetch(200);
+	        config.setMaxPagesToFetch(10); //200);
 
 	        /*
 	         * Instantiate the controller for this crawl.
@@ -39,5 +39,6 @@ public class Controller {
 	         * will reach the line after this only when crawling is finished.
 	         */
 	        controller.start(MyCrawler.class, numberOfCrawlers);
+			LuceneControl.index();
 	}
 }

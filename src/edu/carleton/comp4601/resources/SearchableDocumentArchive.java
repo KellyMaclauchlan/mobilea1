@@ -65,6 +65,24 @@ public class SearchableDocumentArchive {
 		}
 		
 		
+		@Path("query/{query}")
+		@GET
+		@Produces(MediaType.TEXT_HTML)
+		public String search(@PathParam("query") String query) {
+			String content = "none";
+			try {
+				LuceneControl lc = new LuceneControl();
+				ArrayList<CrawledPage> docs = lc.query(query);
+				content = docs.toString();		
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + content
+					+ "</body></h1>" + "</html> ";
+		}
+		
+		
 		@Path("view")
 		@GET
 		@Produces(MediaType.TEXT_HTML)

@@ -185,6 +185,7 @@ public class MyCrawler extends WebCrawler {
              cp.headers=headers;
              cp.body=body;
              cp.docId=doc.id();
+             cp.score = 0;
              
              
              graph.GraphIt(url, links);

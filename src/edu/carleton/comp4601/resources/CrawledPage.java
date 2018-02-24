@@ -12,6 +12,7 @@ public class CrawledPage extends BasicDBObject{
 	int textLength;
 	int htmlLength;
 	int outGoingLinks;
+	float score;
 	Set<String> links;
 	Set<String> linksFound;
 	Set<String> images;
@@ -20,12 +21,14 @@ public class CrawledPage extends BasicDBObject{
 	String text;
 	String html;
 	String docId;
+	String _id;
 	
 	public CrawledPage() {
 		url="";
 		textLength=0;
 		htmlLength=0;
 		outGoingLinks=0;
+		score=0;
 				
 	}
 	
@@ -140,6 +143,22 @@ public class CrawledPage extends BasicDBObject{
 
 	public void setDocId(String docId) {
 		this.docId = docId;
+	}
+	
+	public void setMongoId(String id) {
+		this._id = id;
+	}
+	
+	public String getMongoId() {
+		return _id;
+	}
+	
+	public void setScore(float score) {
+		this.score = score;
+	}
+	
+	public float getScore() {
+		return this.score;
 	}
 	
 
