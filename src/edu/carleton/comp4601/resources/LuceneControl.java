@@ -2,8 +2,10 @@ package edu.carleton.comp4601.resources;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -15,11 +17,18 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.Version;
+import org.bson.types.ObjectId;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 
 import com.mongodb.BasicDBList;
@@ -33,6 +42,8 @@ import com.mongodb.MongoClient;
 import edu.uci.ics.crawler4j.url.WebURL;
 
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.IntPoint;
+import org.apache.lucene.document.StoredField;
 
 public class LuceneControl {
 	
@@ -106,52 +117,52 @@ public class LuceneControl {
 			would be image/jpeg.
 		 * */
 		System.out.println(page.get("url").toString()+ "\n" + page.get("_id").toString() + "\n" + page.get("text").toString());
-		luceneDoc.add(new TextField("url", page.get("url").toString(), Field.Store.NO));
-		luceneDoc.add(new TextField("doc_id", page.get("_id").toString(), Field.Store.NO));
-		//luceneDoc.add(new TextField("date", (String) page.get("_id"), Field.Store.NO));
-		luceneDoc.add(new TextField("content", page.get("text").toString(), Field.Store.YES));	//want to search body
-		//luceneDoc.add(new TextField("metadata", (String) page.get(""), Field.Store.NO));
+		luceneDoc.add(new TextField("URL", page.get("url").toString(), Field.Store.YES));
+		luceneDoc.add(new TextField("DB_ID", page.get("_id").toString(), Field.Store.YES));
 		
+		//luceneDoc.add(new IntPoint("DOC_ID",Integer.valueOf(page.get("_id").toString())));
+		//luceneDoc.add(new StoredField("DOC_ID", Integer.valueOf(page.get("_id").toString())));
+		
+		luceneDoc.add(new TextField("CONTENTS", page.get("text").toString(), Field.Store.YES));	//want to search body
+		
+		System.out.println("lcd: " + luceneDoc.toString());
 		writer.addDocument(luceneDoc);
 	}
 	
+	
 	public ArrayList<CrawledPage> query(String searchString) {	
-		try	{
-			IndexReader	reader = DirectoryReader.open(FSDirectory.open(new File("C:/Users/IBM_ADMIN/dev/mobilea1/lucenedir").toPath()));	
+		ArrayList<CrawledPage> docs = new ArrayList<CrawledPage>();	
+		try {
+			Path path = new File("C:/Users/IBM_ADMIN/dev/mobilea1/lucenedir").toPath();
+			Directory index = FSDirectory.open(path);
+			IndexReader	reader = DirectoryReader.open(index);	
 			IndexSearcher searcher = new IndexSearcher(reader);	
 			Analyzer analyzer = new StandardAnalyzer();
-			QueryParser	parser = new QueryParser("contents", analyzer);	
-			Query q	= parser.parse(searchString);	
-			TopDocs	results	= searcher.search(q, 1000); // 100	documents!	
-			ScoreDoc[] hits	= results.scoreDocs;	
-			reader.close();	
-			return getDocs(hits, searcher);	
-		}	catch (Exception e) {	
-			e.printStackTrace();	
-		}
-		return null;	
-	}
-	
-	 public	ArrayList<CrawledPage> getDocs(ScoreDoc[] hits, IndexSearcher searcher) {	
-		ArrayList<CrawledPage> docs = new ArrayList<CrawledPage>();	
-		for	(ScoreDoc hit: hits) {	
-			Document indexDoc;
-			try {
-				indexDoc = searcher.doc(hit.doc);
-				String id = indexDoc.get("doc_id");	
-				if (id != null)	{	
-					CrawledPage d = find(id);	
-					if (d != null) {	
-						d.setScore(hit.score); // Used in display to user	
-						updateCrawledPageScore(id, hit.score);
-						docs.add(d);	
+		    System.out.println("query: " + searchString);
+		    Query q = new QueryParser("CONTENTS", analyzer).parse(searchString+"*");
+		 
+			TopDocs	results	= searcher.search(q, 5); //make 200 later
+			System.out.println("RES: " + results.totalHits);
+			ScoreDoc[] hits	= results.scoreDocs;
+			for	(ScoreDoc hit: hits) {	
+				Document indexDoc;
+					indexDoc = searcher.doc(hit.doc);
+					String id = indexDoc.get("DB_ID");	
+					System.out.println("ID: " + id);
+					if (id != null)	{	
+						CrawledPage d = find(id);	
+							if (d != null) {	
+								System.out.println("HIT! " + id);
+								d.setScore(hit.score); // Used in display to user	
+								updateCrawledPageScore(id, hit.score);
+								docs.add(d);	
+						}	
 					}	
-				}	
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}	
-		}
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
 		return docs;
 	 }
 
@@ -163,11 +174,24 @@ public class LuceneControl {
 			DBCollection pages = database.getCollection("pages");
 			
 			BasicDBObject query = new BasicDBObject();
-			query.put("_id", id);
+			query.put("_id", new ObjectId(id));//
 			
 			DBCursor cursor = pages.find(query);
 			if(cursor.hasNext()){
-				CrawledPage page = (CrawledPage) cursor.next();
+				DBObject res = cursor.next();
+				
+				HashSet<WebURL> hash = new HashSet<WebURL>();
+
+				for(Object el: (BasicDBList) res.get("links")) {
+				     //res.add((String) el);
+					WebURL url = new WebURL();
+					url.setURL((String) el);
+					hash.add(url);
+				}
+				
+				Set<WebURL> links = hash;
+				CrawledPage page = new CrawledPage((String)res.get("url"), (int) res.get("textLength"), (int) res.get("htmlLength"), (int) res.get("outGoingLinks"), links, (String) res.get("text"), (String)res.get("html"));
+				
 				return page;
 			}
 			

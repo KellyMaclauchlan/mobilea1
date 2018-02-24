@@ -16,6 +16,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.UriInfo;
 
+import org.json.JSONArray;
+
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -25,6 +28,7 @@ import com.mongodb.MongoClient;
 
 import edu.carleton.comp4601.dao.Document;
 import edu.carleton.comp4601.dao.Documents;
+import edu.uci.ics.crawler4j.url.WebURL;
 
 
 @Path("/sda")
@@ -69,13 +73,30 @@ public class SearchableDocumentArchive {
 		@GET
 		@Produces(MediaType.TEXT_HTML)
 		public String search(@PathParam("query") String query) {
-			String content = "none";
+			String content = "";
 			try {
 				LuceneControl lc = new LuceneControl();
 				ArrayList<CrawledPage> docs = lc.query(query);
-				content = docs.toString();		
+				//content = new JSONArray(docs).toString();		
+				if(docs.isEmpty()){
+					content = "No documents";
+				}
+				for(CrawledPage page: docs) {
+				     //res.add((String) el);
+					content += "<h3>"+page.getUrl()+"</h3><p>"+page.getText()+"</p>";
+					if(!page.getLinks().isEmpty()){
+						content += "<h4>Links</h4><ul>";
+						for(String url: page.getLinks()) {
+							content += "<li><a href='"+url+"'>"+url+"</a></li>";
+						}
+						content += "</ul>";
+					}
+					
+					content += "<br/>";
+				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
+				content = "error";
 				e.printStackTrace();
 			}
 			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + content
