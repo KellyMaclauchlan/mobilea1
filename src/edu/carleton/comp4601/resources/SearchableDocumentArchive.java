@@ -2,6 +2,7 @@ package edu.carleton.comp4601.resources;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -103,8 +104,21 @@ public class SearchableDocumentArchive {
 					+ "</body></h1>" + "</html> ";
 		}
 		
+		//pageRankScores();
+		@Path("pagerank")
+		@GET
+		@Produces(MediaType.TEXT_HTML)
+		public String search() {
+			String content = "<h1>"+name+"</h1><h2>Search Results</h2>";
+			LuceneControl lc = new LuceneControl();
+			Map<Vertex,Double> map = lc.pageRankScores();
+			content+=map.toString();
+			
+			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + content
+					+ "</body></h1>" + "</html> ";
+		}
 		
-		@Path("view")
+		@Path("viewgraph")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
 		public String viewGraph(){

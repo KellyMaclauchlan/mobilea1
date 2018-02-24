@@ -2,10 +2,12 @@ package edu.carleton.comp4601.resources;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -28,6 +30,9 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 import org.bson.types.ObjectId;
+import org.jgrapht.alg.scoring.PageRank;
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.Multigraph;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 
@@ -219,6 +224,40 @@ public class LuceneControl {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
+		return null;
+	}
+	
+	
+	public Multigraph<Vertex, DefaultWeightedEdge> getGraph(){
+		MongoClient mongoClient;
+		try {
+			mongoClient = new MongoClient("localhost", 27017);
+			Graph graph = new Graph();
+			DB database = mongoClient.getDB("aone");
+			DBCollection collectionGraph = database.getCollection("graphs");
+			DBCursor cursor = collectionGraph.find().sort(new BasicDBObject("_id", -1)).limit(1);
+			 if( cursor.hasNext() ){
+				 BasicDBObject obj = (BasicDBObject) cursor.next();
+				 //deserializeObject(byte[] data)
+				 graph = (Graph) Marshaller.deserializeObject((byte[]) obj.get("graph"));
+			 	 return graph.getMultiGraph();
+			 }
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	    return null;
+	}
+	
+	public Map<Vertex, Double> pageRankScores(){
+		Multigraph<Vertex, DefaultWeightedEdge> g = getGraph();
+		if(g != null){
+			PageRank<Vertex, DefaultWeightedEdge> pr = new PageRank<Vertex, DefaultWeightedEdge>(g);
+			Map<Vertex, Double> scores = pr.getScores();
+			System.out.println(scores);
+			return scores;
+		}
 		return null;
 	}
 }
