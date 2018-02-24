@@ -109,7 +109,7 @@ public class SearchableDocumentArchive {
 		@GET
 		@Produces(MediaType.TEXT_HTML)
 		public String search() {
-			String content = "<h1>"+name+"</h1><h2>Search Results</h2>";
+			String content = "<h1>"+name+"</h1><h2>Page Rank Results</h2>";
 			LuceneControl lc = new LuceneControl();
 			Map<Vertex,Double> map = lc.pageRankScores();
 			content+=map.toString();
