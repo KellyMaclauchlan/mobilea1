@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -29,6 +30,9 @@ import com.mongodb.MongoClient;
 
 import edu.carleton.comp4601.dao.Document;
 import edu.carleton.comp4601.dao.Documents;
+import edu.carleton.comp4601.utility.SDAConstants;
+import edu.carleton.comp4601.utility.SearchResult;
+import edu.carleton.comp4601.utility.SearchServiceManager;
 import edu.uci.ics.crawler4j.url.WebURL;
 
 
@@ -69,11 +73,52 @@ public class SearchableDocumentArchive {
 					+ "</body></h1>" + "</html> ";
 		}
 		
+		//SearchServiceManager 
+		/*@Path("search/{terms}")
+		@GET
+		@Produces(MediaType.TEXT_HTML)
+		public String search(@PathParam("terms") String terms) {
+			SearchResult res = SearchServiceManager.getInstance().search(terms);
+			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + name
+					+ "</h1>"+res.toString()+"</body>" + "</html> ";
+		}*/
 		
+		@GET	
+		@Path("search/{tags}")	
+		@Produces(MediaType.TEXT_HTML)	
+		public	String	searchForDocs(@PathParam("tags")	String	tags)	{	
+//			Perform	the	distributed	part	of	the	search	
+			SearchResult sr	=	SearchServiceManager.getInstance().query(tags);	
+//			Perform	your	local	search	(this	is	my	specific	code,	yours	differs!)	
+			ArrayList<Document>	docs	=	Documents.getInstance().query(tags);	
+//			We	will	wait	for	up	to	10	seconds	but	will	then	
+//			take	the	documents	that	we	have.	
+			try	{	
+			 	sr.await(SDAConstants.TIMEOUT,	TimeUnit.SECONDS);	
+			}	catch	(Exception	e)	{	
+			}	
+//			Take	the	state	of	the	documents	
+			docs.addAll(sr.getDocs());	
+//			Build	the	page	(not	provided	here)	
+			return	docs.toString();//documentsAsString(docs,	tags);	
+		}
+		/*
+		 * @GET	
+@Path("query/{tags}")	
+@Produces(MediaType.APPLICATION_XML)	
+public	DocumentColleceon queryAsXML(@PathParam("tags")	String	tags)	{	
+DocumentCollec>on	dc	=	new	DocumentCollec>on();	
+//	Perform	your	local	search	(this	is	my	specific	code,	yours	differs!)
+dc.setDocuments(Documents.getInstance().query(tags));	
+//	Return	the	XML	version	of	the	DocumentColleceon
+return	dc;	
+}	
+		 * 
+		 * */
 		@Path("query/{query}")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
-		public String search(@PathParam("query") String query) {
+		public String query(@PathParam("query") String query) {
 			String content = "<h1>"+name+"</h1><h2>Search Results</h2>";
 			try {
 				SearchControl lc = new SearchControl();

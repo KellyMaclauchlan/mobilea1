@@ -9,6 +9,23 @@
 	<param-name>MONGODB_PORT</param-name>
 	<param-value>27017</param-value>
   </context-param>
+  <context-param>
+   <description>This is the name of the search engine</description>
+   <param-name>sda.name</param-name>
+   <param-value>Brittny Lapierre and Kelly Maclauchlan</param-value>
+  </context-param>
+  <context-param>
+    <description>Search engine description the registry</description>
+    <param-name>sda.description</param-name>
+    <param-value>Prof. White's SDA Engine</param-value>
+  </context-param>
+  <context-param>
+    <param-name>sda.url</param-name>
+    <param-value>http://10.0.1.200:8080/COMP4601-SDA/rest/sda/</param-value>
+  </context-param>
+  <listener>
+    <listener-class>edu.carleton.comp4601.utility.SDAContextClass</listener-class>
+  </listener> 
   <servlet>
     <servlet-name>COMP4601-SDA</servlet-name>
     <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
