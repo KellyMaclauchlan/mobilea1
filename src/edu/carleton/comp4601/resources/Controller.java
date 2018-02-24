@@ -39,6 +39,6 @@ public class Controller {
 	         * will reach the line after this only when crawling is finished.
 	         */
 	        controller.start(MyCrawler.class, numberOfCrawlers);
-			LuceneControl.index();
+			SearchControl.index();
 	}
 }

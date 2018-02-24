@@ -50,7 +50,9 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StoredField;
 
-public class LuceneControl {
+
+//TODO: rename to search control 
+public class SearchControl {
 	
 	public static void index(){
 		Analyzer analyzer =	new	StandardAnalyzer();	

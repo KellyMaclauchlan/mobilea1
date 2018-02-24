@@ -76,7 +76,7 @@ public class SearchableDocumentArchive {
 		public String search(@PathParam("query") String query) {
 			String content = "<h1>"+name+"</h1><h2>Search Results</h2>";
 			try {
-				LuceneControl lc = new LuceneControl();
+				SearchControl lc = new SearchControl();
 				ArrayList<CrawledPage> docs = lc.query(query);
 				//content = new JSONArray(docs).toString();		
 				if(docs.isEmpty()){
@@ -110,7 +110,7 @@ public class SearchableDocumentArchive {
 		@Produces(MediaType.TEXT_HTML)
 		public String search() {
 			String content = "<h1>"+name+"</h1><h2>Page Rank Results</h2>";
-			LuceneControl lc = new LuceneControl();
+			SearchControl lc = new SearchControl();
 			Map<Vertex,Double> map = lc.pageRankScores();
 			content+=map.toString();
 			
