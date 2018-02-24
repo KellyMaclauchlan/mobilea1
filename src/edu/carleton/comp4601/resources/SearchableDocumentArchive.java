@@ -73,7 +73,7 @@ public class SearchableDocumentArchive {
 		@GET
 		@Produces(MediaType.TEXT_HTML)
 		public String search(@PathParam("query") String query) {
-			String content = "";
+			String content = "<h1>"+name+"</h1><h2>Search Results</h2>";
 			try {
 				LuceneControl lc = new LuceneControl();
 				ArrayList<CrawledPage> docs = lc.query(query);
