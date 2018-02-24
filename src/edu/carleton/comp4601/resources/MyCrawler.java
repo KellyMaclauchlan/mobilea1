@@ -209,6 +209,7 @@ public class MyCrawler extends WebCrawler {
      				newDocument.put("headers", cp.getHeaders());
      				newDocument.put("images", cp.getImages());
      				newDocument.put("id",cp.getDocId());
+     				newDocument.put("score",cp.getScore());
      				
      				collection.insert(newDocument);
 

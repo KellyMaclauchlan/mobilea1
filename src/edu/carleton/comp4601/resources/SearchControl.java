@@ -215,11 +215,12 @@ public class SearchControl {
 			MongoClient mongoClient = new MongoClient("localhost", 27017);
 			DB database = mongoClient.getDB("aone");
 			DBCollection pages = database.getCollection("pages");
-
+			
 			BasicDBObject newDocument = new BasicDBObject();
-			newDocument.put("score", score);
+			newDocument.append("$set", new BasicDBObject().append("score", score));
 
-			BasicDBObject searchQuery = new BasicDBObject().append("_id", id);
+			BasicDBObject searchQuery = new BasicDBObject().append("_id", new ObjectId(id));
+
 
 			pages.update(searchQuery, newDocument);
 		} catch (Exception e) {
