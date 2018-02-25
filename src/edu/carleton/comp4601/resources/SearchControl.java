@@ -230,6 +230,26 @@ public class SearchControl {
 		return null;
 	}
 	
+	/*private CrawledPage updateCrawledPageTag(String id, float score) {
+		try {
+			MongoClient mongoClient = new MongoClient("localhost", 27017);
+			DB database = mongoClient.getDB("aone");
+			DBCollection pages = database.getCollection("pages");
+			
+			BasicDBObject newDocument = new BasicDBObject();
+			newDocument.append("$set", new BasicDBObject().append("score", score));
+
+			BasicDBObject searchQuery = new BasicDBObject().append("_id", new ObjectId(id));
+
+
+			pages.update(searchQuery, newDocument);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		return null;
+	}*/
+	
 	
 	public Multigraph<Vertex, DefaultWeightedEdge> getGraph(){
 		MongoClient mongoClient;

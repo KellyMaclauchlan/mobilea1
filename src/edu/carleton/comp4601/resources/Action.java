@@ -18,6 +18,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 
 
@@ -135,4 +136,24 @@ public class Action {
 		if (!Documents.getInstance().close(new Integer(id)))
 			throw new RuntimeException("Document " + id + " not found");
 	}
+	
+	
+	/*private void populateDocuments(){
+		try {
+			MongoClient mongoClient = new MongoClient("localhost", 27017);
+			DB database = mongoClient.getDB("aone");
+			DBCollection pages = database.getCollection("pages");
+			DBCursor cursor = pages.find();
+			while(cursor.hasNext()){
+				DBObject page = cursor.next();
+				Document doc = new Document();
+				
+				
+			}
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+	}*/
 }

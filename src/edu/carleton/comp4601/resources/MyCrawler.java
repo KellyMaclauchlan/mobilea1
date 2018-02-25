@@ -5,6 +5,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -24,6 +26,12 @@ import org.apache.tika.mime.MimeTypes;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
+import org.apache.tika.parser.html.HtmlParser;
+import org.apache.tika.sax.BodyContentHandler;
+import org.apache.tika.sax.Link;
+import org.apache.tika.sax.LinkContentHandler;
+import org.apache.tika.sax.TeeContentHandler;
+import org.apache.tika.sax.ToHTMLContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -43,10 +51,12 @@ import edu.uci.ics.crawler4j.url.WebURL;
 public class MyCrawler extends WebCrawler {
 	Graph graph;
 	MongoClient mongoClient;
+	int idCount;
 	
 	public MyCrawler() {
 		super();
 		graph = new Graph();
+		idCount = 0;
 		
 		try {
 			mongoClient = new MongoClient("localhost", 27017);
@@ -93,141 +103,128 @@ public class MyCrawler extends WebCrawler {
       */
      @Override
      public void visit(Page page) {
-         String url = page.getWebURL().getURL();
-         System.out.println("URL: " + url);
-        String ending= url.substring(url.lastIndexOf('.') + 1);
-        System.out.println(ending);
-//         MimeTypes types = MimeTypes.getDefaultMimeTypes();
-//         System.out.println(types.toString());
-//         MimeType type = types.getMimeType(url);
-         
-         //class task 7 
-//         InputStream input = null;
-//         try {
-//			input = TikaInputStream.get(new URL(url));
-//		} catch (MalformedURLException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		} catch (IOException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-//        	 ContentHandler handler = null;	 
-//             Metadata metadata = new Metadata(); 
-//             ParseContext context = new ParseContext(); 
-//             Parser parser = new AutoDetectParser(); 
-//             try {
-//				parser.parse(input, handler, metadata, context);
-//			} catch (IOException e1) {
-//				// TODO Auto-generated catch block
-//				e1.printStackTrace();
-//			} catch (SAXException e1) {
-//				// TODO Auto-generated catch block
-//				e1.printStackTrace();
-//			} catch (TikaException e1) {
-//				// TODO Auto-generated catch block
-//				e1.printStackTrace();
-//			}
-//         if(metadata.get(Metadata.CONTENT_TYPE)=="this"){
-//             String title = metadata.get(Metadata.TITLE);
-//             String tyype= metadata.get(Metadata.CONTENT_TYPE);
-//             
-//         }
-         
-         if (page.getParseData() instanceof HtmlParseData) {
-             HtmlParseData htmlParseData = (HtmlParseData) page.getParseData();
-             String text = htmlParseData.getText();
-             String html = htmlParseData.getHtml();
-             Set<WebURL> links = htmlParseData.getOutgoingUrls();
+        String url = page.getWebURL().getURL();
+        System.out.println("URL: " + url);
+        try {
+          URL url2 = new URL(url);
+          InputStream input = url2.openStream();
+          LinkContentHandler linkHandler = new LinkContentHandler();
+          ContentHandler textHandler = new BodyContentHandler();
+          ToHTMLContentHandler toHTMLHandler = new ToHTMLContentHandler();
+          TeeContentHandler teeHandler = new TeeContentHandler(linkHandler, textHandler, toHTMLHandler);
+          Metadata metadata = new Metadata();
+          ParseContext parseContext = new ParseContext();
+          HtmlParser parser = new HtmlParser();
 
-             System.out.println("Text length: " + text.length());
-             System.out.println("Html length: " + html.length());
-             System.out.println("Number of outgoing links: " + links.size());
+		  parser.parse(input, teeHandler, metadata, parseContext);
+		  
+		  
+	      System.out.println("title:\n" + metadata.get("title"));
+	      System.out.println("links:\n" + linkHandler.getLinks());
+	      System.out.println("text:\n" + textHandler.toString());
+	      System.out.println("html:\n" + toHTMLHandler.toString());
+	      
+	      String text = textHandler.toString();
+          String html = toHTMLHandler.toString();
+          String title = metadata.get("title");
+          //Set<WebURL> links = htmlParseData.getOutgoingUrls();
+          Set<WebURL> links = new HashSet<WebURL>();
+          ArrayList<String> linksArray = new ArrayList<String>();
+          for(Link link : linkHandler.getLinks()){
+         	 WebURL wurl = new WebURL();
+			 wurl.setURL(link.getUri());
+         	 links.add(wurl);
+         	 linksArray.add(link.getUri());
+          }
+	      //metadata.get(property)
+	      System.out.println("MD: " + metadata.names().toString());
+
+	      
+	      
+	      Document doc = Jsoup.parse(toHTMLHandler.toString());
+
              
-             Document doc = null;
-             try {
-				doc= Jsoup.connect(url).get();
-				
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+          HashSet<String> linksfound=new HashSet<String>();
+          HashSet<String> headers=new HashSet<String>();
+          HashSet<String> body=new HashSet<String>();
+          HashSet<String> images=new HashSet<String>();
+          ArrayList<String> tags = new ArrayList<String>();
              
-             // class task 6 
+          Elements linksFound = doc.select("a[href]");
+          for( Element e : linksFound){
+             linksfound.add(e.attr("href")+" "+e.text());
+          }
+          Elements im = doc.select("img[src~=(?i)\\.(png|jpe?g|gif)]");
+          for( Element e : im){
+             images.add("src:"+e.attr("src")+" height: "+e.attr("height")+" width: "+e.attr("width")+" alt: "+e.attr("alt"));
+             tags.add(e.attr("alt"));
+          }
+          Elements para = doc.select("p");
+          for( Element e : para){
+             body.add(e.text());
+             tags.add(e.text());
+          }
+          Elements heads = doc.select("h0, h1, h2, h3, h4");
+          for( Element e : heads){
+             headers.add(e.text());
+             tags.add(e.text());
+          }
+
+          Elements metaTags = doc.select("meta");
+          for( Element e : metaTags){
+             tags.add(e.text());
+          }
              
-             HashSet<String> linksfound=new HashSet<String>();
-             HashSet<String> headers=new HashSet<String>();
-             HashSet<String> body=new HashSet<String>();
-             HashSet<String> images=new HashSet<String>();
+          //do mongo db entries here 
+          CrawledPage cp= new CrawledPage(url,text.length(),html.length(),links.size(),links,text,html);
+          cp.linksFound=linksfound;
+          cp.images=images;
+          cp.headers=headers;
+          cp.body=body;
+          cp.docId=doc.id();
+          cp.score = 0;
              
+
              
-             Elements linksFound = doc.select("a[href]");
-             for( Element e : linksFound){
-            	 linksfound.add(e.attr("href")+" "+e.text());
-             }
-             Elements im = doc.select("img[src~=(?i)\\.(png|jpe?g|gif)]");
-             for( Element e : im){
-            	 images.add("src:"+e.attr("src")+" height: "+e.attr("height")+" width: "+e.attr("width")+" alt: "+e.attr("alt"));
-             }
-             Elements para = doc.select("p");
-             for( Element e : para){
-            	 body.add(e.text());
-             }
-             Elements heads = doc.select("h0, h1, h2, h3, h4");
-             for( Element e : heads){
-            	 headers.add(e.text());
-             }
-             
-             //do mongo db entries here 
-             CrawledPage cp= new CrawledPage(url,text.length(),html.length(),links.size(),links,text,html);
-             cp.linksFound=linksfound;
-             cp.images=images;
-             cp.headers=headers;
-             cp.body=body;
-             cp.docId=doc.id();
-             cp.score = 0;
-             
-             
-             graph.GraphIt(url, links);
-             
-     		try {
-     			DB database = mongoClient.getDB("aone");
-     			DBCollection collection = database.getCollection("pages");
-     			collection.setObjectClass(CrawledPage.class);
+     	  DB database = mongoClient.getDB("aone");
+     	  DBCollection collection = database.getCollection("pages");
+     	  collection.setObjectClass(CrawledPage.class);
      			
 
-     				BasicDBObject newDocument = new BasicDBObject();
-     				newDocument.put("url", cp.getUrl());
-     				newDocument.put("textLength", cp.getTextLength());
-     				newDocument.put("htmlLength", cp.getHtmlLength());
-     				newDocument.put("outGoingLinks", cp.getOutGoingLinks());
-     				newDocument.put("links", cp.getLinks());
-     				newDocument.put("text", cp.getText());
-     				newDocument.put("html", cp.getHtml());
-     				newDocument.put("linksfound", cp.getLinksFound());
-     				newDocument.put("body", cp.getBody());
-     				newDocument.put("headers", cp.getHeaders());
-     				newDocument.put("images", cp.getImages());
-     				newDocument.put("id",cp.getDocId());
-     				newDocument.put("score",cp.getScore());
+     	  BasicDBObject newDocument = new BasicDBObject();
+     	  newDocument.put("url", cp.getUrl());
+     	  newDocument.put("textLength", cp.getTextLength());
+     	  newDocument.put("htmlLength", cp.getHtmlLength());
+     	  newDocument.put("outGoingLinks", cp.getOutGoingLinks());
+     	  newDocument.put("links", cp.getLinks());
+     	  newDocument.put("text", cp.getText());
+     	  newDocument.put("html", cp.getHtml());
+     	  newDocument.put("linksfound", cp.getLinksFound());
+     	  newDocument.put("body", cp.getBody());
+     	  newDocument.put("headers", cp.getHeaders());
+     	  newDocument.put("images", cp.getImages());
+     	  newDocument.put("id",cp.getDocId());
+     	  newDocument.put("score",cp.getScore());
      				
-     				collection.insert(newDocument);
+     	  collection.insert(newDocument);
 
-         			DBCollection collectionGraph = database.getCollection("graphs");
-         			BasicDBObject newDoc = new BasicDBObject();
-         			byte[] g = Marshaller.serializeObject(graph);
-     				newDoc.put("graph", g);
-     				newDoc.put("url",cp.getUrl());
-     				collectionGraph.insert(newDoc);
-     	            System.out.println("GRAPH: " + graph.toString());
+     	  DBCollection collectionGraph = database.getCollection("graphs");
+     	  BasicDBObject newDoc = new BasicDBObject();
+     	  byte[] g = Marshaller.serializeObject(graph);
+     	  newDoc.put("graph", g);
+     	  newDoc.put("url",cp.getUrl());
+     	  collectionGraph.insert(newDoc);
      				
-     			} catch (IOException e) {
-     				// TODO Auto-generated catch block
-     				e.printStackTrace();
-     			}
-     		
-     			
-         }
-         
+
+      	  graph.GraphIt(url, links);
+     	  DocumentHandler dh = new DocumentHandler();
+     	  dh.saveDocument(idCount, 0, title, url, textHandler.toString(), linksArray, tags);
+     		      
+     	  System.out.println("GRAPH: " + graph.toString());
+     	  idCount++;	
+     	} catch (Exception e2) {
+     	  // TODO Auto-generated catch block
+     	  e2.printStackTrace();
+     	}
     }
 }
