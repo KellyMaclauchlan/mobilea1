@@ -218,7 +218,6 @@ public class SearchableDocumentArchive {
 					query.put("url", doc.getUrl());
 					System.out.println("HERE 3");
 					pageCollection.remove(query);
-					System.out.println("HERE 4");
 						
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -304,15 +303,29 @@ public class SearchableDocumentArchive {
 			Collection<Document> values = Documents.getInstance().getDocs().values();
 			
 			ArrayList<String> deleted = new ArrayList<String>();
-			for(CrawledPage page: docs) {
-				for(Document doc : values){
-					if(page.getUrl() == doc.getUrl()){
-						if(Documents.getInstance().find(doc.getId()) != null){
-							deleted.add(doc.getName());
-							Documents.getInstance().close(doc.getId());
+
+			MongoClient mongoClient;
+			try {
+				mongoClient = new MongoClient("localhost", 27017);
+				DB database = mongoClient.getDB("aone");
+				DBCollection pageCollection = database.getCollection("pages");
+				for(CrawledPage page: docs) {
+					for(Document doc : values){
+						if(page.getUrl() == doc.getUrl()){
+							if(Documents.getInstance().find(doc.getId()) != null){
+								deleted.add(doc.getName());
+								BasicDBObject obj = new BasicDBObject();
+								obj.put("url", doc.getUrl());
+								System.out.println("HERE 3");
+								pageCollection.remove(obj);
+								Documents.getInstance().close(doc.getId());
+							}
 						}
 					}
 				}
+				
+			} catch (Exception e) {
+			e.printStackTrace();
 			}
 			
 			String content = "<ul>";
