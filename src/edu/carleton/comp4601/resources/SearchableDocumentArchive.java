@@ -77,6 +77,7 @@ public class SearchableDocumentArchive {
 			return "<html> " + "<title>" + name + "</title>" + "<body><h1>" + name
 					+ "</h1>Registered</body>" + "</html> ";
 		}
+		
 		@Path("unregister")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
@@ -85,6 +86,7 @@ public class SearchableDocumentArchive {
 			return "<html> " + "<title>" + name + "</title>" + "<body><h1>" + name
 					+ "</h1>Unregistered</body>" + "</html> ";
 		}
+		
 		@Path("list")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
@@ -151,9 +153,22 @@ public class SearchableDocumentArchive {
 					+ "</h1><h3>List of all documents</h3>"+content+"</body>" + "</html> ";
 		}
 		
+		@Path("documents")
+		@GET
+		@Produces(MediaType.APPLICATION_XML)
+		public String documentsXML() {
+			String content = "<documents>";
+			for (Document doc : Documents.getInstance().getDocs().values()){
+				content += "<document>" + doc.getName() + "</document>";
+			}
+			content += "</documents>";
+			return content;
+		}
+		
+		
 		@Path("view/{id}")
 		@GET
-		@Produces(MediaType.TEXT_HTML)
+		@Produces(MediaType.APPLICATION_XML)
 		public String viewByID(@PathParam("id") int id) {
 			Document doc = Documents.getInstance().find(id);
 			String tags = "";
@@ -166,6 +181,23 @@ public class SearchableDocumentArchive {
 			}
 			return "<html> " + "<title>" + "View Document" + "</title>" + "<body><h1>" + name
 					+ "</h1><h3>"+doc.getName()+"</h3><h5><i>"+doc.getUrl()+"</i></h5><p>"+doc.getText()+"</p>"+tags+"</body>" + "</html> ";
+		}
+		
+		
+		@Path("view/{id}")
+		@GET
+		@Produces(MediaType.TEXT_XML)
+		public String viewByIDXML(@PathParam("id") int id) {
+			Document doc = Documents.getInstance().find(id);
+			String tags = "";
+			if(!doc.getTags().isEmpty()){
+				tags += "<tags>";
+				for(String tag : doc.getTags()){
+					tags += "<tag>" + tag + "</tag>";
+				}
+				tags += "</tags>";
+			}
+			return "<document><name>"+doc.getName()+"</name><url>"+doc.getUrl()+"</url><text>"+doc.getText()+"</text>"+tags+"</document> ";
 		}
 		
 		@Path("delete")
@@ -324,6 +356,7 @@ public class SearchableDocumentArchive {
 					+ "</h1>"+content+"</body>" + "</html> ";
 		}
 		
+		
 		//TODO: no results rn - find reason why
 		@Path("search/{terms}")
 		@GET
@@ -434,12 +467,112 @@ public class SearchableDocumentArchive {
 					+ "</body></h1>" + "</html> ";
 		}
 		
+		
+		
+		@Path("search/{terms}")
+		@GET
+		@Produces(MediaType.APPLICATION_XML)
+		public String profSearchXML(@PathParam("terms") String terms) {
+			String content = "";
+			try {
+				String[] termarr = terms.split("\\+");
+				System.out.println(termarr);
+				ArrayList<Document> docs = Documents.getInstance().searchForDocs(new ArrayList<String>(Arrays.asList(termarr)), true);
+				
+				for(Document page: docs) {
+					content += "<result><url>"+page.getUrl()+"</url><text>"+page.getText()+"</text>";
+					if(!page.getLinks().isEmpty()){
+						content += "<links>";
+						for(String url: page.getLinks()) {
+							content += "<link>"+url+"</link>";
+						}
+						content += "</links>";
+					}
+					
+					content += "</result>";
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				content = "error";
+				e.printStackTrace();
+			}
+			return "<results>" + content + "</results>";
+		}
+
+		//TODO: no results rn - find reason why
+		@Path("simplequery/{query}")
+		@GET
+		@Produces(MediaType.APPLICATION_XML)
+		public String profQueryXML(@PathParam("query") String query) {
+			String content = "";
+			SearchResult sr	=	SearchServiceManager.getInstance().query(query);
+			ArrayList<Document> docs = new ArrayList<Document>();//Documents.getInstance().query(query);	
+			try {
+				sr.await(SDAConstants.TIMEOUT,	TimeUnit.SECONDS);
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}		
+			docs.addAll(sr.getDocs());	
+			
+			try {
+				for(Document page: docs) {
+					content += "<result><url>"+page.getUrl()+"</url><text>"+page.getText()+"</text>";
+					if(!page.getLinks().isEmpty()){
+						content += "<links>";
+						for(String url: page.getLinks()) {
+							content += "<link>"+url+"</link>";
+						}
+						content += "</links>";
+					}
+					
+					content += "</result>";
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				content = "error";
+				e.printStackTrace();
+			}
+			return "<results>" + content + "</results>";
+		}
+		
+		//TODO: make above work then delete or change url for this request
+		//Multiple: http://localhost:8080/COMP4601-SDA/rest/sda/query/+coconut%20banana
+		@Path("query/{query}")
+		@GET
+		@Produces(MediaType.APPLICATION_XML)
+		public String queryXML(@PathParam("query") String query) {
+			String content = "";
+			try {
+				SearchControl lc = new SearchControl();
+				ArrayList<CrawledPage> docs = lc.query(query);	
+				for(CrawledPage page: docs) {
+					content += "<result><url>"+page.getUrl()+"</h3><p>"+page.getText()+"</p>";
+					if(!page.getLinks().isEmpty()){
+						content += "<links>";
+						for(String url: page.getLinks()) {
+							content += "<link>"+url+"</link>";
+						}
+						content += "</links>";
+					}
+					
+					content += "</result>";
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				content = "error";
+				e.printStackTrace();
+			}
+			return "<results>" + content + "</results>";
+		}
+		
+		
 		//TODO: return html table
 		@Path("pagerank")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
 		public String search() {
-			String content = "<h1>"+name+"</h1><h2>Page Rank Results</h2>";
+			String content = "<h1>"+name+"</h1><h2>Page Rank Results</h2><table style=\"border: 1px solid grey;border-collapse: collapse;\"><tr><th style=\"border: 1px solid grey;\">Page</th><th style=\"border: 1px solid grey;\">Page Rank Score</th></tr>";
 			SearchControl lc = new SearchControl();
 			ArrayList<CrawledPage> pages = lc.pageRankedPages();
 			if(pages.isEmpty()){
@@ -447,13 +580,12 @@ public class SearchableDocumentArchive {
 			}
 			for(CrawledPage page: pages) {
 			     //res.add((String) el);
-				content += "<h3>Page: "+page.getUrl()+"</h3><p>Page Rank: "+page.getPageRank()+"</p>";
+				content += "<tr><td style=\"border: 1px solid grey;\">"+page.getUrl()+"</td><td style=\"border: 1px solid grey;\">"+page.getPageRank()+"</td></tr>";
 				
-				content += "<br/>";
 			}
 			
 			return "<html> " + "<title>" + "pagerank" + "</title>" + "<body><h1>" + content
-					+ "</body></h1>" + "</html> ";
+					+ "</table></body></h1>" + "</html> ";
 		}
 		
 		@Path("boost")
