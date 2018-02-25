@@ -263,6 +263,49 @@ public class SearchControl {
 		}
 		return null;
 	}
+	
+	public ArrayList<CrawledPage> pageRankedPages(){
+		Map<Vertex, Double> pageRanks = pageRankScores();
+		ArrayList<CrawledPage> pages = new ArrayList<CrawledPage>();
+		
+		if(pageRanks != null){
+			MongoClient mongoClient;
+			try {
+				mongoClient = new MongoClient("localhost", 27017);
+				DB database = mongoClient.getDB("aone");
+				DBCollection pageCollection = database.getCollection("pages");
+				for (Map.Entry<Vertex, Double> pageRank : pageRanks.entrySet()){
+					
+					BasicDBObject query = new BasicDBObject();
+					query.put("url", pageRank.getKey().getUrl());//
+					
+					DBCursor cursor = pageCollection.find(query);//.limit(1)
+					
+					if(cursor.hasNext()){
+						BasicDBObject res = (BasicDBObject) cursor.next();
+						HashSet<WebURL> hash = new HashSet<WebURL>();
+
+						for(Object el: (BasicDBList) res.get("links")) {
+						     //res.add((String) el);
+							WebURL url = new WebURL();
+							url.setURL((String) el);
+							hash.add(url);
+						}
+						
+						Set<WebURL> links = hash;
+						CrawledPage page = new CrawledPage((String)res.get("url"), (int) res.get("textLength"), (int) res.get("htmlLength"), (int) res.get("outGoingLinks"), links, (String) res.get("text"), (String)res.get("html"));
+						page.setPageRank(pageRank.getValue());
+						pages.add(page);
+					}
+					//System.out.println(pageRank.getKey() + "/" + pageRank.getValue());
+				} 
+			} catch (Exception e){
+				e.printStackTrace();
+			}
+		}
+		
+		return pages;
+	}
 }
 	
 	/* in class ex

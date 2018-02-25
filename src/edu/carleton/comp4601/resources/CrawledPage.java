@@ -13,6 +13,7 @@ public class CrawledPage extends BasicDBObject{
 	int htmlLength;
 	int outGoingLinks;
 	float score;
+	double pageRank;
 	Set<String> links;
 	Set<String> linksFound;
 	Set<String> images;
@@ -159,6 +160,14 @@ public class CrawledPage extends BasicDBObject{
 	
 	public float getScore() {
 		return this.score;
+	}
+	
+	public void setPageRank(double pageRank) {
+		this.pageRank = pageRank;
+	}
+	
+	public double getPageRank() {
+		return this.pageRank;
 	}
 	
 

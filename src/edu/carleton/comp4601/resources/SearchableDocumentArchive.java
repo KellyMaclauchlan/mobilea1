@@ -83,38 +83,43 @@ public class SearchableDocumentArchive {
 					+ "</h1>"+res.toString()+"</body>" + "</html> ";
 		}*/
 		
+/*
+ * TODO: fix error/make custom:
+ * org.apache.lucene.index.IndexNotFoundException: no segments* file found in MMapDirectory@C:\Users\IBM_ADMIN\SDA\index lockFactory=org.apache.lucene.store.NativeFSLockFactory@4e39afb5: files: []
+	at org.apache.lucene.index.SegmentInfos$FindSegmentsFile.run(SegmentInfos.java:685)
+ * 
+ * */	
 		@GET	
 		@Path("search/{tags}")	
 		@Produces(MediaType.TEXT_HTML)	
-		public	String	searchForDocs(@PathParam("tags")	String	tags)	{	
-//			Perform	the	distributed	part	of	the	search	
-			SearchResult sr	=	SearchServiceManager.getInstance().query(tags);	
-//			Perform	your	local	search	(this	is	my	specific	code,	yours	differs!)	
+		public	String	searchForDocs(@PathParam("tags") String	tags){	
+			SearchResult sr	= SearchServiceManager.getInstance().query(tags);	
+			//Perform your local search	(this	is	my	specific	code,	yours	differs!)	
 			ArrayList<Document>	docs	=	Documents.getInstance().query(tags);	
-//			We	will	wait	for	up	to	10	seconds	but	will	then	
-//			take	the	documents	that	we	have.	
+			//We	will	wait	for	up	to	10	seconds	but	will	then	
+			//			take	the	documents	that	we	have.	
 			try	{	
 			 	sr.await(SDAConstants.TIMEOUT,	TimeUnit.SECONDS);	
 			}	catch	(Exception	e)	{	
 			}	
-//			Take	the	state	of	the	documents	
+			//Take	the	state	of	the	documents	
 			docs.addAll(sr.getDocs());	
-//			Build	the	page	(not	provided	here)	
+			//Build	the	page	(not	provided	here)	
 			return	docs.toString();//documentsAsString(docs,	tags);	
 		}
-		/*
-		 * @GET	
+		
+/* TODO: change to prof's search method
+* @GET	
 @Path("query/{tags}")	
 @Produces(MediaType.APPLICATION_XML)	
-public	DocumentColleceon queryAsXML(@PathParam("tags")	String	tags)	{	
-DocumentCollec>on	dc	=	new	DocumentCollec>on();	
-//	Perform	your	local	search	(this	is	my	specific	code,	yours	differs!)
-dc.setDocuments(Documents.getInstance().query(tags));	
-//	Return	the	XML	version	of	the	DocumentColleceon
-return	dc;	
-}	
-		 * 
-		 * */
+	public	DocumentColleceon queryAsXML(@PathParam("tags")	String	tags)	{	
+	DocumentCollec>on	dc	=	new	DocumentCollec>on();	
+	//	Perform	your	local	search	(this	is	my	specific	code,	yours	differs!)
+	dc.setDocuments(Documents.getInstance().query(tags));	
+	//	Return	the	XML	version	of	the	DocumentColleceon
+	return	dc;	
+}*/
+
 		@Path("query/{query}")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
@@ -156,8 +161,16 @@ return	dc;
 		public String search() {
 			String content = "<h1>"+name+"</h1><h2>Page Rank Results</h2>";
 			SearchControl lc = new SearchControl();
-			Map<Vertex,Double> map = lc.pageRankScores();
-			content+=map.toString();
+			ArrayList<CrawledPage> pages = lc.pageRankedPages();
+			if(pages.isEmpty()){
+				content = "No documents";
+			}
+			for(CrawledPage page: pages) {
+			     //res.add((String) el);
+				content += "<h3>Page: "+page.getUrl()+"</h3><p>Page Rank: "+page.getPageRank()+"</p>";
+				
+				content += "<br/>";
+			}
 			
 			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + content
 					+ "</body></h1>" + "</html> ";
