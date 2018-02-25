@@ -54,6 +54,105 @@ import org.apache.lucene.document.StoredField;
 //TODO: rename to search control 
 public class SearchControl {
 	
+	public void indexPageRank(){
+		Analyzer analyzer =	new	StandardAnalyzer();	
+		/*
+		 * For	each	resource	(i.e.,	a	MongoDB	document)	
+			– Create	a	Lucene	document	
+			– Use	each	field	Mongo	document	create	a	field	in	
+			  the	Lucene	document	deciding	whether	to	allow	it	
+			  to	be	searchable	or	not.		
+			– Save	the	Lucent	document.	*/
+		/*
+		 */
+		//File docDir	= new File(CRAWL_DIR);	
+		FSDirectory dir;
+		IndexWriter	writer;
+		IndexWriterConfig iwc;
+		try {
+			//dir = FSDirectory.open(new File("C:/Users/IBM_ADMIN/dev/mobilea1/lucenedir").toPath());
+			dir = FSDirectory.open(new File("C:/Users/IBM_ADMIN/SDA/index").toPath());
+			iwc	= new IndexWriterConfig(analyzer);	
+			iwc.setOpenMode(OpenMode.CREATE);	
+			writer = new IndexWriter(dir, iwc);	
+			indexDocumentsPageRank(writer);	
+			
+			if (writer	!=	null)
+				writer.close();	
+			
+		 	if	(dir	!=	null)	
+				dir.close();
+		 	
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+	}
+	
+	private void indexDocumentsPageRank(IndexWriter writer){
+		/*try {
+			MongoClient mongoClient = new MongoClient("localhost", 27017);
+			DB database = mongoClient.getDB("aone");
+			DBCollection pages = database.getCollection("pages");
+			DBCursor cursor = pages.find();
+			while(cursor.hasNext()){
+				DBObject page = cursor.next();
+				
+				indexMongoDoc(writer, page);
+				
+			}
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} */
+		ArrayList<CrawledPage> pages = pageRankedPages();
+		for(CrawledPage page : pages){
+			try {
+				indexDocPageRank(writer, page);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private void indexDocPageRank(IndexWriter writer, CrawledPage page) throws IOException {
+		Document luceneDoc = new Document();
+		
+		/*
+		 * Your Lucene documents must contain fields for:
+			URL -- the resolved location of the original document.
+			DocID -- the id of the document stored within your database.
+			Date -- meaning the date and time when the document was crawled.
+			Content -- this is the content returned by the content handler used in the Standard 
+			Analyzer. For HTML page this should contain information extracted using JSOUP; e.g., 
+			content of paragraph, heading and title tags. For images, this may not contain much.
+			Metadata fields -- a field should be created for each piece of meta data; e.g., for 
+			a file with a MIME type of image/jpeg the field name would be type and the value 
+			would be image/jpeg.
+		 * */
+		System.out.println(page.getUrl()+ "\n" + page.getDocId() + "\n" + page.getText());
+		
+		TextField tf = new TextField("URL", page.getUrl(), Field.Store.YES);
+		tf.setBoost((float) (1+page.getPageRank()));
+		luceneDoc.add(tf);
+		
+		TextField tf2 = new TextField("DocID", page.getDocId(), Field.Store.YES);
+		tf2.setBoost((float) (1+page.getPageRank()));
+		luceneDoc.add(tf2);
+		
+		//luceneDoc.add(new IntPoint("DocID",Integer.valueOf(page.get("_id").toString())));
+		//luceneDoc.add(new StoredField("DOC_ID", Integer.valueOf(page.get("_id").toString())));
+		TextField tf3 = new TextField("Content", page.getText(), Field.Store.YES);
+		tf3.setBoost((float) (1+page.getPageRank()));
+		luceneDoc.add(tf3);	//want to search body
+		
+		System.out.println("lcd: " + luceneDoc.toString());
+		writer.addDocument(luceneDoc);
+	}
+	
+	
 	public static void index(){
 		Analyzer analyzer =	new	StandardAnalyzer();	
 		/*
@@ -70,7 +169,8 @@ public class SearchControl {
 		IndexWriter	writer;
 		IndexWriterConfig iwc;
 		try {
-			dir = FSDirectory.open(new File("C:/Users/IBM_ADMIN/dev/mobilea1/lucenedir").toPath());
+			//dir = FSDirectory.open(new File("C:/Users/IBM_ADMIN/dev/mobilea1/lucenedir").toPath());
+			dir = FSDirectory.open(new File("C:/Users/IBM_ADMIN/SDA/index").toPath());
 			iwc	= new IndexWriterConfig(analyzer);	
 			iwc.setOpenMode(OpenMode.CREATE);	
 			writer = new IndexWriter(dir, iwc);	
@@ -124,14 +224,19 @@ public class SearchControl {
 			would be image/jpeg.
 		 * */
 		System.out.println(page.get("url").toString()+ "\n" + page.get("_id").toString() + "\n" + page.get("text").toString());
-		luceneDoc.add(new TextField("URL", page.get("url").toString(), Field.Store.YES));
-		luceneDoc.add(new TextField("DB_ID", page.get("_id").toString(), Field.Store.YES));
+		TextField tf = new TextField("URL", page.get("url").toString(), Field.Store.YES);
+		tf.setBoost(1);
+		luceneDoc.add(tf);
 		
-		//luceneDoc.add(new IntPoint("DOC_ID",Integer.valueOf(page.get("_id").toString())));
+		TextField tf2 = new TextField("DocID", page.get("_id").toString(), Field.Store.YES);
+		tf2.setBoost(1);
+		luceneDoc.add(tf2);
+		
+		//luceneDoc.add(new IntPoint("DocID",Integer.valueOf(page.get("_id").toString())));
 		//luceneDoc.add(new StoredField("DOC_ID", Integer.valueOf(page.get("_id").toString())));
-		
-		luceneDoc.add(new TextField("CONTENTS", page.get("text").toString(), Field.Store.YES));	//want to search body
-		
+		TextField tf3 = new TextField("Content", page.get("text").toString(), Field.Store.YES);
+		tf3.setBoost(1);
+		luceneDoc.add(tf3);	//want to search body
 		System.out.println("lcd: " + luceneDoc.toString());
 		writer.addDocument(luceneDoc);
 	}
@@ -140,13 +245,13 @@ public class SearchControl {
 	public ArrayList<CrawledPage> query(String searchString) {	
 		ArrayList<CrawledPage> docs = new ArrayList<CrawledPage>();	
 		try {
-			Path path = new File("C:/Users/IBM_ADMIN/dev/mobilea1/lucenedir").toPath();
+			Path path = new File("C:/Users/IBM_ADMIN/SDA/index").toPath();
 			Directory index = FSDirectory.open(path);
 			IndexReader	reader = DirectoryReader.open(index);	
 			IndexSearcher searcher = new IndexSearcher(reader);	
 			Analyzer analyzer = new StandardAnalyzer();
 		    System.out.println("query: " + searchString);
-		    Query q = new QueryParser("CONTENTS", analyzer).parse(searchString+"*");
+		    Query q = new QueryParser("Content", analyzer).parse(searchString+"*");
 		 
 			TopDocs	results	= searcher.search(q, 5); //make 200 later
 			System.out.println("RES: " + results.totalHits);
@@ -154,7 +259,7 @@ public class SearchControl {
 			for	(ScoreDoc hit: hits) {	
 				Document indexDoc;
 					indexDoc = searcher.doc(hit.doc);
-					String id = indexDoc.get("DB_ID");	
+					String id = indexDoc.get("DocID");	
 					System.out.println("ID: " + id);
 					if (id != null)	{	
 						CrawledPage d = find(id);	
@@ -314,6 +419,7 @@ public class SearchControl {
 						
 						Set<WebURL> links = hash;
 						CrawledPage page = new CrawledPage((String)res.get("url"), (int) res.get("textLength"), (int) res.get("htmlLength"), (int) res.get("outGoingLinks"), links, (String) res.get("text"), (String)res.get("html"));
+						page.setDocId(res.getObjectId("_id").toString());
 						page.setPageRank(pageRank.getValue());
 						pages.add(page);
 					}

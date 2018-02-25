@@ -1,6 +1,8 @@
 package edu.carleton.comp4601.resources;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -137,41 +139,133 @@ public class SearchableDocumentArchive {
 					+ "</h1><h3>"+doc.getName()+"</h3><h5><i>"+doc.getUrl()+"</i></h5><p>"+doc.getText()+"</p>"+tags+"</body>" + "</html> ";
 		}
 		
-		/*
+		@Path("delete")
+		@DELETE
+		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+		@Produces(MediaType.TEXT_HTML)
+		public String deleteByID(@FormParam("id") int id) {
+			System.out.println("HERE 1");
+			Document doc = Documents.getInstance().find(id);
+			if(doc != null){
+				System.out.println("HERE 2");
+				MongoClient mongoClient;
+				try {
+					mongoClient = new MongoClient("localhost", 27017);
+					DB database = mongoClient.getDB("aone");
+					DBCollection pageCollection = database.getCollection("pages");
+					BasicDBObject query = new BasicDBObject();
+					query.put("url", doc.getUrl());
+					System.out.println("HERE 3");
+					pageCollection.remove(query);
+					System.out.println("HERE 4");
+						
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				System.out.println("HERE 5");
+				Documents.getInstance().close(id);
+				System.out.println("HERE 6");
+				return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + name
+						+ "</h1><h3>Deleted doc with id: "+id+" named: "+doc.getName()+"</h3></body>" + "</html> ";
+			}
+			
+			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + name
+					+ "</h1><h3>No matching docs</h3></body>" + "</html> ";
+		}
+		
 		
 		@Path("update")
 		@POST
+		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 		@Produces(MediaType.TEXT_HTML)
-		public String update() {
-			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + name
-					+ "</body></h1>" + "</html> ";
+		public String update(@FormParam("id") int id,@FormParam("score")
+		float score,@FormParam("name") String name,@FormParam("url") String url,
+		@FormParam("text") String text,@FormParam("tags") List<String> tags,
+		@FormParam("links") List<String> links){
+			//create a new document with all of the fields and add to collection
+		  if(Documents.getInstance().find(id) != null){
+			String url2 = Documents.getInstance().find(id).getUrl();
+			Documents.getInstance().close(id);
+			
+			Document doc = new Document();
+			doc.setId(id);
+			doc.setScore(score);
+			doc.setName(name);
+			doc.setUrl(url);
+			doc.setText(text);
+			doc.setLinks((ArrayList<String>) links);
+			doc.setTags((ArrayList<String>) tags);
+			
+			Documents.getInstance().open(doc);
+			
+			MongoClient mongoClient;
+			try {
+				mongoClient = new MongoClient("localhost", 27017);
+				DB database = mongoClient.getDB("aone");
+				DBCollection pageCollection = database.getCollection("pages");
+				
+				
+				BasicDBObject query = new BasicDBObject();
+				query.put("url", url2);
+				pageCollection.remove(query);
+				
+				
+				BasicDBObject document = new BasicDBObject();
+				document.put("score", score);
+				document.put("name", name);
+				document.put("url", url);
+				document.put("text", text);
+				document.put("links", links);
+				document.put("tags", tags);
+
+				pageCollection.insert(document);
+				
+			} catch (Exception e){
+				e.printStackTrace();
+			}
+			return "updated Document";
+		  }
+			
+		  return "Document not found";
 		}
 		
-		@Path("view/{id}")
-		@GET
-		@Produces(MediaType.TEXT_HTML)
-		public String viewByID() {
-			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + name
-					+ "</body></h1>" + "</html> ";
-		}
-		
-		@Path("delete/{id}")
+		//TODO: once distributed search works remove this ugly code and delete properly
+		@Path("deletequery")
 		@DELETE
+		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 		@Produces(MediaType.TEXT_HTML)
-		public String deleteByID() {
+		public String deleteByQuery(@FormParam("query") String query) {
+			SearchControl lc = new SearchControl();
+			ArrayList<CrawledPage> docs = lc.query(query);
+			if(docs.isEmpty()){
+				return "no documents matching query";
+			}
+			Collection<Document> values = Documents.getInstance().getDocs().values();
+			
+			ArrayList<String> deleted = new ArrayList<String>();
+			for(CrawledPage page: docs) {
+				for(Document doc : values){
+					if(page.getUrl() == doc.getUrl()){
+						if(Documents.getInstance().find(doc.getId()) != null){
+							deleted.add(doc.getName());
+							Documents.getInstance().close(doc.getId());
+						}
+					}
+				}
+			}
+			
+			String content = "<ul>";
+			if(deleted.isEmpty()){
+				content = "none";
+			} else {
+				for(String name : deleted){
+					content += "<li>"+name+"</li>";
+				}
+			}
+			content += "</ul>";
 			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + name
-					+ "</body></h1>" + "</html> ";
+					+ "</h1>"+content+"</body>" + "</html> ";
 		}
-		
-		@Path("delete/{tags}")
-		@DELETE
-		@Produces(MediaType.TEXT_HTML)
-		public String deleteByTags() {
-			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + name
-					+ "</body></h1>" + "</html> ";
-		}*/
-		
-		
 
 		//CRAWL AND SEARCH REQUESTS
 		
@@ -201,60 +295,100 @@ public class SearchableDocumentArchive {
 					+ "</h1>"+content+"</body>" + "</html> ";
 		}
 		
-		//TODO
 		/*
-		 * sda/reset
-		 * sda/list
-		 * sda/boost
-		 * sda/noboost
+		 * SearchResult sr	=	SearchServiceManager.getInstance().query(tags);	
+//	Perform	your	local	search	(this	is	my	specific	code,	yours	differs!)	
+ArrayList<Document>	docs	=	Documents.getInstance().query(tags);	
+//	We	will	wait	for	up	to	10	seconds	but	will	then	
+//	take	the	documents	that	we	have.	
+try	{	
+	 	sr.await(SDAConstants.TIMEOUT,	TimeUnit.SECONDS);	
+}	catch	(InterruptedExcepcon	e)	{	
+}	
+//	Take	the	state	of	the	documents	
+docs.addAll(sr.getDocs());	
+//	Build	the	page	(not	provided	here)	
+return	documentsAsString(docs,	tags);	
+		 * 
+		 * 
+		 * 
 		 * */
-		//SearchServiceManager 
-		/*@Path("search/{terms}")
+		//TODO: Not sure how to get ip working - see profs email for solution suggestion
+		@Path("search/{terms}")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
-		public String search(@PathParam("terms") String terms) {
-			SearchResult res = SearchServiceManager.getInstance().search(terms);
-			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + name
-					+ "</h1>"+res.toString()+"</body>" + "</html> ";
-		}*/
-		
-/*
- * TODO: fix error/make custom:
- * org.apache.lucene.index.IndexNotFoundException: no segments* file found in MMapDirectory@C:\Users\IBM_ADMIN\SDA\index lockFactory=org.apache.lucene.store.NativeFSLockFactory@4e39afb5: files: []
-	at org.apache.lucene.index.SegmentInfos$FindSegmentsFile.run(SegmentInfos.java:685)
- * 
- * 	
-		@GET	
-		@Path("search/{tags}")	
-		@Produces(MediaType.TEXT_HTML)	
-		public	String	searchForDocs(@PathParam("tags") String	tags){	
-			SearchResult sr	= SearchServiceManager.getInstance().query(tags);	
-			//Perform your local search	(this	is	my	specific	code,	yours	differs!)	
-			ArrayList<Document>	docs	=	Documents.getInstance().query(tags);	
-			//We	will	wait	for	up	to	10	seconds	but	will	then	
-			//			take	the	documents	that	we	have.	
-			try	{	
-			 	sr.await(SDAConstants.TIMEOUT,	TimeUnit.SECONDS);	
-			}	catch	(Exception	e)	{	
-			}	
-			//Take	the	state	of	the	documents	
-			docs.addAll(sr.getDocs());	
-			//Build	the	page	(not	provided	here)	
-			return	docs.toString();//documentsAsString(docs,	tags);	
-		}*/
-		
-/* TODO: change to prof's search method
-* @GET	
-@Path("query/{tags}")	
-@Produces(MediaType.APPLICATION_XML)	
-	public	DocumentColleceon queryAsXML(@PathParam("tags")	String	tags)	{	
-	DocumentCollec>on	dc	=	new	DocumentCollec>on();	
-	//	Perform	your	local	search	(this	is	my	specific	code,	yours	differs!)
-	dc.setDocuments(Documents.getInstance().query(tags));	
-	//	Return	the	XML	version	of	the	DocumentColleceon
-	return	dc;	
-}*/
+		public String profSearch(@PathParam("terms") String terms) {
+			String content = "<h1>"+name+"</h1><h2>Search Results</h2>";
+			try {
+				String[] termarr = terms.split("\\+");
+				ArrayList<Document> docs = Documents.getInstance().searchForDocs(new ArrayList<String>(Arrays.asList(termarr)), true);
+				if(docs.isEmpty()){
+					content = "No documents";
+				}
+				for(Document page: docs) {
+				     //res.add((String) el);
+					content += "<h3>"+page.getUrl()+"</h3><p>"+page.getText()+"</p>";
+					if(!page.getLinks().isEmpty()){
+						content += "<h4>Links</h4><ul>";
+						for(String url: page.getLinks()) {
+							content += "<li><a href='"+url+"'>"+url+"</a></li>";
+						}
+						content += "</ul>";
+					}
+					
+					content += "<br/>";
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				content = "error";
+				e.printStackTrace();
+			}
+			return "<html> " + "<title>" + "local search" + "</title>" + "<body><h1>" + content
+					+ "</body></h1>" + "</html> ";
+		}
 
+		@Path("simplequery/{query}")
+		@GET
+		@Produces(MediaType.TEXT_HTML)
+		public String profQuery(@PathParam("query") String query) {
+			String content = "<h1>"+name+"</h1><h2>Search Results</h2>";
+			SearchResult sr	=	SearchServiceManager.getInstance().query(query);
+			ArrayList<Document> docs = new ArrayList<Document>();//Documents.getInstance().query(query);	
+			try {
+				sr.await(SDAConstants.TIMEOUT,	TimeUnit.SECONDS);
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}		
+			docs.addAll(sr.getDocs());	
+			
+			try {
+				if(docs.isEmpty()){
+					content = "No documents";
+				}
+				for(Document page: docs) {
+					content += "<h3>"+page.getUrl()+"</h3><p>"+page.getText()+"</p>";
+					if(!page.getLinks().isEmpty()){
+						content += "<h4>Links</h4><ul>";
+						for(String url: page.getLinks()) {
+							content += "<li><a href='"+url+"'>"+url+"</a></li>";
+						}
+						content += "</ul>";
+					}
+					
+					content += "<br/>";
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				content = "error";
+				e.printStackTrace();
+			}
+			return "<html> " + "<title>" + "local search" + "</title>" + "<body><h1>" + content
+					+ "</body></h1>" + "</html> ";
+		}
+		
+		//TODO: make above work then delete or change url for this request
+		//Multiple: http://localhost:8080/COMP4601-SDA/rest/sda/query/+coconut%20banana
 		@Path("query/{query}")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
@@ -262,13 +396,11 @@ public class SearchableDocumentArchive {
 			String content = "<h1>"+name+"</h1><h2>Search Results</h2>";
 			try {
 				SearchControl lc = new SearchControl();
-				ArrayList<CrawledPage> docs = lc.query(query);
-				//content = new JSONArray(docs).toString();		
+				ArrayList<CrawledPage> docs = lc.query(query);	
 				if(docs.isEmpty()){
 					content = "No documents";
 				}
 				for(CrawledPage page: docs) {
-				     //res.add((String) el);
 					content += "<h3>"+page.getUrl()+"</h3><p>"+page.getText()+"</p>";
 					if(!page.getLinks().isEmpty()){
 						content += "<h4>Links</h4><ul>";
@@ -311,6 +443,30 @@ public class SearchableDocumentArchive {
 					+ "</body></h1>" + "</html> ";
 		}
 		
+		/*
+		 * Boost document relevance using Page Rank scores. sda/boost using GET. This will re-index the database and apply a boost value to each document field that is equal to the Page Rank score of the document.
+		 *	No boost. sda/noboost using GET. This will re-index the database giving a boost value of 1 to all fields of all documents in the database.
+		 * */
+		
+		@Path("boost")
+		@GET
+		@Produces(MediaType.TEXT_HTML)
+		public String boost(){
+			SearchControl sc = new SearchControl();
+			sc.indexPageRank();	
+			return "<html> " + "<title>" + "Boosted" + "</title>" + "<body>Boosted re-indexing complete.</body>" + "</html> ";
+		}
+		
+		@Path("noboost")
+		@GET
+		@Produces(MediaType.TEXT_HTML)
+		public String noboost(){
+			SearchControl.index();
+			return "<html> " + "<title>" + "re-indexed" + "</title>" + "<body>Re-indexing complete.</body>" + "</html> ";
+		}
+		
+		
+		
 		@Path("viewgraph")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
@@ -336,39 +492,5 @@ public class SearchableDocumentArchive {
 			}
 			return "<html> " + "<title>" + "last graph" + "</title>" + "<body>"+content+"</body>" + "</html> ";
 		}
-		
-
-		
-		
-		
-//		@Path("delete")
-//		@GET
-//		@Produces(MediaType.TEXT_PLAIN)
-//		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-//		public String delete(@FormParam("tags") ArrayList<String> tags,
-//				@Context HttpServletResponse servletResponse) throws IOException {
-//			
-//			ArrayList<Document> docs=Documents.getInstance().searchForDocs(tags, false);
-//			for(Document d :docs){
-//				Documents.getInstance().close(d.getId());
-//			}
-//			return "Files deleted";
-//			
-//		}
-//		@Path("search")
-//		@GET
-//		@Produces(MediaType.TEXT_PLAIN)
-//		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-//		public String search(@FormParam("tags") ArrayList<String> tags,
-//				@Context HttpServletResponse servletResponse) throws IOException {
-//			
-//			ArrayList<Document> docs=Documents.getInstance().searchForDocs(tags, true);
-//			String docstring="";
-//			for(Document d :docs){
-//				docstring+=d.getName()+"\n";
-//			}
-//			return docstring;
-//			
-//		}
 		
 }
