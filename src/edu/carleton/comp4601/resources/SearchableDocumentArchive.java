@@ -63,16 +63,64 @@ public class SearchableDocumentArchive {
 					+ "</body></h1>" + "</html> ";
 		}
 		
-		/*
+		@POST
+		@Produces(MediaType.TEXT_PLAIN)
+		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+		public String newDocument(@FormParam("id") int id,@FormParam("score")
+		float score,@FormParam("name") String name,@FormParam("url") String url,
+		@FormParam("text") String text,@FormParam("tags") List<String> tags,
+		@FormParam("links") List<String> links){
+			//create a new document with all of the fields and add to collection
+			Document doc = new Document();
+			doc.setId(id);
+			doc.setScore(score);
+			doc.setName(name);
+			doc.setUrl(url);
+			doc.setText(text);
+			doc.setLinks((ArrayList<String>) links);
+			doc.setTags((ArrayList<String>) tags);
+			
+			Documents.getInstance().open(doc);
+			
+			MongoClient mongoClient;
+			try {
+				mongoClient = new MongoClient("localhost", 27017);
+				DB database = mongoClient.getDB("aone");
+				DBCollection pageCollection = database.getCollection("pages");
+				
+				BasicDBObject document = new BasicDBObject();
+				document.put("score", score);
+				document.put("name", name);
+				document.put("url", url);
+				document.put("text", text);
+				document.put("links", links);
+				document.put("tags", tags);
+
+				pageCollection.insert(document);
+				
+			} catch (Exception e){
+				e.printStackTrace();
+			}
+			
+			return "new Document entered";
+		}
+		
+		
 		//DOCUMENT REQUESTS
 		@Path("documents")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
 		public String documents() {
-			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + name
-					+ "</body></h1>" + "</html> ";
+			String content = "<ul>";
+			for (Document doc : Documents.getInstance().getDocs().values()){
+				content += "<li>" + doc.getName() + "</li>";
+			}
+			content += "</ul>";
+			return "<html> " + "<title>" + "Doc List" + "</title>" + "<body><h1>" + name
+					+ "</h1><h3>List of all documents</h3>"+content+"</body>" + "</html> ";
 		}
 		
+		/*
 		//create
 		@POST
 		@Produces(MediaType.TEXT_PLAIN)
@@ -262,7 +310,7 @@ public class SearchableDocumentArchive {
 				content = "error";
 				e.printStackTrace();
 			}
-			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + content
+			return "<html> " + "<title>" + "local search" + "</title>" + "<body><h1>" + content
 					+ "</body></h1>" + "</html> ";
 		}
 		
@@ -284,7 +332,7 @@ public class SearchableDocumentArchive {
 				content += "<br/>";
 			}
 			
-			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + content
+			return "<html> " + "<title>" + "pagerank" + "</title>" + "<body><h1>" + content
 					+ "</body></h1>" + "</html> ";
 		}
 		
@@ -311,7 +359,7 @@ public class SearchableDocumentArchive {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			return "<html> " + "<title>" + "no" + "</title>" + "<body>"+content+"</body>" + "</html> ";
+			return "<html> " + "<title>" + "last graph" + "</title>" + "<body>"+content+"</body>" + "</html> ";
 		}
 		
 
