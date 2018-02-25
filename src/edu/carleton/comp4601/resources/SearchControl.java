@@ -99,11 +99,11 @@ public class SearchControl {
 		tf.setBoost((float) (1+page.getPageRank()));
 		luceneDoc.add(tf);
 		
-		TextField tf2 = new TextField("DocID", page.getDocId(), Field.Store.YES);
+		TextField tf2 = new TextField("docId", page.getDocId(), Field.Store.YES);
 		tf2.setBoost((float) (1+page.getPageRank()));
 		luceneDoc.add(tf2);
 		
-		TextField tf3 = new TextField("Content", page.getText(), Field.Store.YES);
+		TextField tf3 = new TextField("contents", page.getText(), Field.Store.YES);
 		tf3.setBoost((float) (1+page.getPageRank()));
 		luceneDoc.add(tf3);	//want to search body
 		
@@ -165,11 +165,11 @@ public class SearchControl {
 		tf.setBoost(1);
 		luceneDoc.add(tf);
 		
-		TextField tf2 = new TextField("DocID", page.get("_id").toString(), Field.Store.YES);
+		TextField tf2 = new TextField("docId", page.get("_id").toString(), Field.Store.YES);
 		tf2.setBoost(1);
 		luceneDoc.add(tf2);
 		
-		TextField tf3 = new TextField("Content", page.get("text").toString(), Field.Store.YES);
+		TextField tf3 = new TextField("contents", page.get("text").toString(), Field.Store.YES);
 		tf3.setBoost(1);
 		luceneDoc.add(tf3);	//want to search body
 		System.out.println("lcd: " + luceneDoc.toString());
@@ -186,7 +186,7 @@ public class SearchControl {
 			IndexSearcher searcher = new IndexSearcher(reader);	
 			Analyzer analyzer = new StandardAnalyzer();
 		    System.out.println("query: " + searchString);
-		    Query q = new QueryParser("Content", analyzer).parse(searchString+"*");
+		    Query q = new QueryParser("contents", analyzer).parse(searchString+"*");
 		 
 			TopDocs	results	= searcher.search(q, 5); //make 200 later
 			System.out.println("RES: " + results.totalHits);
@@ -194,7 +194,7 @@ public class SearchControl {
 			for	(ScoreDoc hit: hits) {	
 				Document indexDoc;
 					indexDoc = searcher.doc(hit.doc);
-					String id = indexDoc.get("DocID");	
+					String id = indexDoc.get("docId");	
 					System.out.println("ID: " + id);
 					if (id != null)	{	
 						CrawledPage d = find(id);	

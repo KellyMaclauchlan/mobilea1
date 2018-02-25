@@ -38,6 +38,7 @@ import edu.carleton.comp4601.dao.Documents;
 import edu.carleton.comp4601.utility.SDAConstants;
 import edu.carleton.comp4601.utility.SearchResult;
 import edu.carleton.comp4601.utility.SearchServiceManager;
+import edu.carleton.comp4601.utility.ServiceRegistrar;
 import edu.uci.ics.crawler4j.url.WebURL;
 
 
@@ -54,6 +55,8 @@ public class SearchableDocumentArchive {
 
 		public SearchableDocumentArchive() {
 			name = "COMP4601 Searchable Document Archive V2.1: Brittny Lapierre and Kelly Maclauchlan";
+			ServiceRegistrar.register(name, "hbp://sikaman.dyndns.org:8080/COMP4601-Directory/rest/directory", SDAConstants.COMP4601SDA, "Kelly and Brittny Search");
+			//register
 			//put in call to db to get accounts and put into the list 
 			Documents.getInstance();
 		}
@@ -63,6 +66,32 @@ public class SearchableDocumentArchive {
 		public String sayHtml() {
 			return "<html> " + "<title>" + name + "</title>" + "<body><h1>" + name
 					+ "</body></h1>" + "</html> ";
+		}
+		
+		@Path("register")
+		@GET
+		@Produces(MediaType.TEXT_HTML)
+		public String register() {
+			ServiceRegistrar.register(name, "hbp://sikaman.dyndns.org:8080/COMP4601-Directory/rest/directory", SDAConstants.COMP4601SDA, "Kelly and Brittny Search");
+			
+			return "<html> " + "<title>" + name + "</title>" + "<body><h1>" + name
+					+ "</h1>Registered</body>" + "</html> ";
+		}
+		@Path("unregister")
+		@GET
+		@Produces(MediaType.TEXT_HTML)
+		public String unregister() {
+			ServiceRegistrar.unregister(name);
+			return "<html> " + "<title>" + name + "</title>" + "<body><h1>" + name
+					+ "</h1>Unregistered</body>" + "</html> ";
+		}
+		@Path("list")
+		@GET
+		@Produces(MediaType.TEXT_HTML)
+		public String list() {
+			String serverList = ServiceRegistrar.list();
+			return "<html> " + "<title>" + name + "</title>" + "<body><h1>" + name
+					+ "</h1><h3>List</h3>"+serverList+"</body>" + "</html> ";
 		}
 		
 		@POST
