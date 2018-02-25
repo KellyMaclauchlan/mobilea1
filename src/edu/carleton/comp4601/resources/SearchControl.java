@@ -107,6 +107,11 @@ public class SearchControl {
 		tf3.setBoost((float) (1+page.getPageRank()));
 		luceneDoc.add(tf3);	//want to search body
 		
+		//i
+		TextField tf4 = new TextField("i","COMP4601 Searchable Document Archive V2.1: Brittny Lapierre and Kelly Maclauchlan", Field.Store.YES);
+		tf4.setBoost(1);
+		luceneDoc.add(tf4);	//want to search body
+		
 		System.out.println("lcd: " + luceneDoc.toString());
 		writer.addDocument(luceneDoc);
 	}
@@ -172,6 +177,12 @@ public class SearchControl {
 		TextField tf3 = new TextField("contents", page.get("text").toString(), Field.Store.YES);
 		tf3.setBoost(1);
 		luceneDoc.add(tf3);	//want to search body
+		
+		//i
+		TextField tf4 = new TextField("i","COMP4601 Searchable Document Archive V2.1: Brittny Lapierre and Kelly Maclauchlan", Field.Store.YES);
+		tf4.setBoost(1);
+		luceneDoc.add(tf4);	//want to search body
+		
 		System.out.println("lcd: " + luceneDoc.toString());
 		writer.addDocument(luceneDoc);
 	}
