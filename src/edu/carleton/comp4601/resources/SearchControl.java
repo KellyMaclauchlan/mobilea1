@@ -56,21 +56,10 @@ public class SearchControl {
 	
 	public void indexPageRank(){
 		Analyzer analyzer =	new	StandardAnalyzer();	
-		/*
-		 * For	each	resource	(i.e.,	a	MongoDB	document)	
-			– Create	a	Lucene	document	
-			– Use	each	field	Mongo	document	create	a	field	in	
-			  the	Lucene	document	deciding	whether	to	allow	it	
-			  to	be	searchable	or	not.		
-			– Save	the	Lucent	document.	*/
-		/*
-		 */
-		//File docDir	= new File(CRAWL_DIR);	
 		FSDirectory dir;
 		IndexWriter	writer;
 		IndexWriterConfig iwc;
 		try {
-			//dir = FSDirectory.open(new File("C:/Users/IBM_ADMIN/dev/mobilea1/lucenedir").toPath());
 			dir = FSDirectory.open(new File("C:/Users/IBM_ADMIN/SDA/index").toPath());
 			iwc	= new IndexWriterConfig(analyzer);	
 			iwc.setOpenMode(OpenMode.CREATE);	
@@ -90,22 +79,6 @@ public class SearchControl {
 	}
 	
 	private void indexDocumentsPageRank(IndexWriter writer){
-		/*try {
-			MongoClient mongoClient = new MongoClient("localhost", 27017);
-			DB database = mongoClient.getDB("aone");
-			DBCollection pages = database.getCollection("pages");
-			DBCursor cursor = pages.find();
-			while(cursor.hasNext()){
-				DBObject page = cursor.next();
-				
-				indexMongoDoc(writer, page);
-				
-			}
-			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} */
 		ArrayList<CrawledPage> pages = pageRankedPages();
 		for(CrawledPage page : pages){
 			try {
@@ -119,19 +92,7 @@ public class SearchControl {
 	
 	private void indexDocPageRank(IndexWriter writer, CrawledPage page) throws IOException {
 		Document luceneDoc = new Document();
-		
-		/*
-		 * Your Lucene documents must contain fields for:
-			URL -- the resolved location of the original document.
-			DocID -- the id of the document stored within your database.
-			Date -- meaning the date and time when the document was crawled.
-			Content -- this is the content returned by the content handler used in the Standard 
-			Analyzer. For HTML page this should contain information extracted using JSOUP; e.g., 
-			content of paragraph, heading and title tags. For images, this may not contain much.
-			Metadata fields -- a field should be created for each piece of meta data; e.g., for 
-			a file with a MIME type of image/jpeg the field name would be type and the value 
-			would be image/jpeg.
-		 * */
+
 		System.out.println(page.getUrl()+ "\n" + page.getDocId() + "\n" + page.getText());
 		
 		TextField tf = new TextField("URL", page.getUrl(), Field.Store.YES);
@@ -142,8 +103,6 @@ public class SearchControl {
 		tf2.setBoost((float) (1+page.getPageRank()));
 		luceneDoc.add(tf2);
 		
-		//luceneDoc.add(new IntPoint("DocID",Integer.valueOf(page.get("_id").toString())));
-		//luceneDoc.add(new StoredField("DOC_ID", Integer.valueOf(page.get("_id").toString())));
 		TextField tf3 = new TextField("Content", page.getText(), Field.Store.YES);
 		tf3.setBoost((float) (1+page.getPageRank()));
 		luceneDoc.add(tf3);	//want to search body
@@ -155,21 +114,11 @@ public class SearchControl {
 	
 	public static void index(){
 		Analyzer analyzer =	new	StandardAnalyzer();	
-		/*
-		 * For	each	resource	(i.e.,	a	MongoDB	document)	
-			– Create	a	Lucene	document	
-			– Use	each	field	Mongo	document	create	a	field	in	
-			  the	Lucene	document	deciding	whether	to	allow	it	
-			  to	be	searchable	or	not.		
-			– Save	the	Lucent	document.	*/
-		/*
-		 */
-		//File docDir	= new File(CRAWL_DIR);	
+
 		FSDirectory dir;
 		IndexWriter	writer;
 		IndexWriterConfig iwc;
 		try {
-			//dir = FSDirectory.open(new File("C:/Users/IBM_ADMIN/dev/mobilea1/lucenedir").toPath());
 			dir = FSDirectory.open(new File("C:/Users/IBM_ADMIN/SDA/index").toPath());
 			iwc	= new IndexWriterConfig(analyzer);	
 			iwc.setOpenMode(OpenMode.CREATE);	
@@ -210,19 +159,7 @@ public class SearchControl {
 	
 	private static void indexMongoDoc(IndexWriter writer, DBObject page) throws IOException {
 		Document luceneDoc = new Document();
-		
-		/*
-		 * Your Lucene documents must contain fields for:
-			URL -- the resolved location of the original document.
-			DocID -- the id of the document stored within your database.
-			Date -- meaning the date and time when the document was crawled.
-			Content -- this is the content returned by the content handler used in the Standard 
-			Analyzer. For HTML page this should contain information extracted using JSOUP; e.g., 
-			content of paragraph, heading and title tags. For images, this may not contain much.
-			Metadata fields -- a field should be created for each piece of meta data; e.g., for 
-			a file with a MIME type of image/jpeg the field name would be type and the value 
-			would be image/jpeg.
-		 * */
+
 		System.out.println(page.get("url").toString()+ "\n" + page.get("_id").toString() + "\n" + page.get("text").toString());
 		TextField tf = new TextField("URL", page.get("url").toString(), Field.Store.YES);
 		tf.setBoost(1);
@@ -232,8 +169,6 @@ public class SearchControl {
 		tf2.setBoost(1);
 		luceneDoc.add(tf2);
 		
-		//luceneDoc.add(new IntPoint("DocID",Integer.valueOf(page.get("_id").toString())));
-		//luceneDoc.add(new StoredField("DOC_ID", Integer.valueOf(page.get("_id").toString())));
 		TextField tf3 = new TextField("Content", page.get("text").toString(), Field.Store.YES);
 		tf3.setBoost(1);
 		luceneDoc.add(tf3);	//want to search body
@@ -335,26 +270,6 @@ public class SearchControl {
 		return null;
 	}
 	
-	/*private CrawledPage updateCrawledPageTag(String id, float score) {
-		try {
-			MongoClient mongoClient = new MongoClient("localhost", 27017);
-			DB database = mongoClient.getDB("aone");
-			DBCollection pages = database.getCollection("pages");
-			
-			BasicDBObject newDocument = new BasicDBObject();
-			newDocument.append("$set", new BasicDBObject().append("score", score));
-
-			BasicDBObject searchQuery = new BasicDBObject().append("_id", new ObjectId(id));
-
-
-			pages.update(searchQuery, newDocument);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		return null;
-	}*/
-	
 	
 	public Multigraph<Vertex, DefaultWeightedEdge> getGraph(){
 		MongoClient mongoClient;
@@ -423,7 +338,6 @@ public class SearchControl {
 						page.setPageRank(pageRank.getValue());
 						pages.add(page);
 					}
-					//System.out.println(pageRank.getKey() + "/" + pageRank.getValue());
 				} 
 			} catch (Exception e){
 				e.printStackTrace();
@@ -433,26 +347,6 @@ public class SearchControl {
 		return pages;
 	}
 }
-	
-	/* in class ex
-	 * private	void indexAFile(File	file,	FileInputStream fis)	throws	IOExcep0on	{	
-		doc	=	new	Document();	
-		Field pathField	=	new	StringField(PATH,	file.getPath(),	Field.Store.YES);	
-		doc.add(pathField);	
-		try	{	
-			 	int docId	=	Integer.valueOf(file.getName().replaceFirst("[.][^.]+$",	""));	
-			 	doc.add(new	IntField(DOC_ID,	docId,	Field.Store.YES));	
-		}	catch	(NumberFormatExcep0on	e)	{	
-		}	
-		doc.add(new	StoredField(MODIFIED,	file.lastModified()));	
-		doc.add(new	TextField(CONTENTS,	new	BufferedReader(	
-					new	InputStreamReader(fis,	"UTF-8"))));	
-		writer.addDocument(doc);	
-		}*/	
-	
-	/*
-	 * 	
-	*/
 	
 
 

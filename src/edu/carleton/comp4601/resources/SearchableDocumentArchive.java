@@ -295,25 +295,7 @@ public class SearchableDocumentArchive {
 					+ "</h1>"+content+"</body>" + "</html> ";
 		}
 		
-		/*
-		 * SearchResult sr	=	SearchServiceManager.getInstance().query(tags);	
-//	Perform	your	local	search	(this	is	my	specific	code,	yours	differs!)	
-ArrayList<Document>	docs	=	Documents.getInstance().query(tags);	
-//	We	will	wait	for	up	to	10	seconds	but	will	then	
-//	take	the	documents	that	we	have.	
-try	{	
-	 	sr.await(SDAConstants.TIMEOUT,	TimeUnit.SECONDS);	
-}	catch	(InterruptedExcepcon	e)	{	
-}	
-//	Take	the	state	of	the	documents	
-docs.addAll(sr.getDocs());	
-//	Build	the	page	(not	provided	here)	
-return	documentsAsString(docs,	tags);	
-		 * 
-		 * 
-		 * 
-		 * */
-		//TODO: Not sure how to get ip working - see profs email for solution suggestion
+		//TODO: no results rn - find reason why
 		@Path("search/{terms}")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
@@ -347,6 +329,7 @@ return	documentsAsString(docs,	tags);
 					+ "</body></h1>" + "</html> ";
 		}
 
+		//TODO: no results rn - find reason why
 		@Path("simplequery/{query}")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
@@ -442,11 +425,6 @@ return	documentsAsString(docs,	tags);
 			return "<html> " + "<title>" + "pagerank" + "</title>" + "<body><h1>" + content
 					+ "</body></h1>" + "</html> ";
 		}
-		
-		/*
-		 * Boost document relevance using Page Rank scores. sda/boost using GET. This will re-index the database and apply a boost value to each document field that is equal to the Page Rank score of the document.
-		 *	No boost. sda/noboost using GET. This will re-index the database giving a boost value of 1 to all fields of all documents in the database.
-		 * */
 		
 		@Path("boost")
 		@GET
