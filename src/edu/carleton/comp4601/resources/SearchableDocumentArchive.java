@@ -120,49 +120,24 @@ public class SearchableDocumentArchive {
 					+ "</h1><h3>List of all documents</h3>"+content+"</body>" + "</html> ";
 		}
 		
-		/*
-		//create
-		@POST
-		@Produces(MediaType.TEXT_PLAIN)
-		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-		public String newDocument(@FormParam("id") int id,@FormParam("score")
-		float score,@FormParam("name") String name,@FormParam("url") String url,
-		@FormParam("text") String text,@FormParam("tags") List<String> tags,
-		@FormParam("links") List<String> links){
-			//create a new document with all of the fields and add to collection
-			Document doc = new Document();
-			doc.setId(id);
-			doc.setScore(score);
-			doc.setName(name);
-			doc.setUrl(url);
-			doc.setText(text);
-			doc.setLinks((ArrayList<String>) links);
-			doc.setTags((ArrayList<String>) tags);
-			
-			Documents.getInstance().open(doc);
-			
-			MongoClient mongoClient;
-			try {
-				mongoClient = new MongoClient("localhost", 27017);
-				DB database = mongoClient.getDB("aone");
-				DBCollection pageCollection = database.getCollection("pages");
-				
-				BasicDBObject document = new BasicDBObject();
-				document.put("score", score);
-				document.put("name", name);
-				document.put("url", url);
-				document.put("text", text);
-				document.put("links", links);
-				document.put("tags", tags);
-
-				pageCollection.insert(document);
-				
-			} catch (Exception e){
-				e.printStackTrace();
+		@Path("view/{id}")
+		@GET
+		@Produces(MediaType.TEXT_HTML)
+		public String viewByID(@PathParam("id") int id) {
+			Document doc = Documents.getInstance().find(id);
+			String tags = "";
+			if(!doc.getTags().isEmpty()){
+				tags += "<h4>Tags</h4><ul>";
+				for(String tag : doc.getTags()){
+					tags += "<li>" + tag + "</li>";
+				}
+				tags += "</ul>";
 			}
-			
-			return "new Document entered";
+			return "<html> " + "<title>" + "View Document" + "</title>" + "<body><h1>" + name
+					+ "</h1><h3>"+doc.getName()+"</h3><h5><i>"+doc.getUrl()+"</i></h5><p>"+doc.getText()+"</p>"+tags+"</body>" + "</html> ";
 		}
+		
+		/*
 		
 		@Path("update")
 		@POST
@@ -314,7 +289,7 @@ public class SearchableDocumentArchive {
 					+ "</body></h1>" + "</html> ";
 		}
 		
-		//pageRankScores();
+		//TODO: return html table
 		@Path("pagerank")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
