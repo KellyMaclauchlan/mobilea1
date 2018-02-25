@@ -149,7 +149,15 @@ public class MyCrawler extends WebCrawler {
           HashSet<String> body=new HashSet<String>();
           HashSet<String> images=new HashSet<String>();
           ArrayList<String> tags = new ArrayList<String>();
-             
+
+          if(title != null && title.length() > 0){
+        	  tags.add(title); 
+          }
+          
+          //if(metadata.get("description").length() > 0){
+        //	  tags.add(metadata.get("description")); 
+          //}
+          
           Elements linksFound = doc.select("a[href]");
           for( Element e : linksFound){
              linksfound.add(e.attr("href")+" "+e.text());
@@ -169,11 +177,12 @@ public class MyCrawler extends WebCrawler {
              headers.add(e.text());
              tags.add(e.text());
           }
-
-          Elements metaTags = doc.select("meta");
+          
+          /*Elements metaTags = doc.select("meta");
           for( Element e : metaTags){
              tags.add(e.text());
-          }
+          }*/
+          
              
           //do mongo db entries here 
           CrawledPage cp= new CrawledPage(url,text.length(),html.length(),links.size(),links,text,html);
