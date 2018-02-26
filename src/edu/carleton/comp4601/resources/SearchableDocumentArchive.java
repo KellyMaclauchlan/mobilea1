@@ -170,7 +170,7 @@ public class SearchableDocumentArchive {
 		
 		@Path("view/{id}")
 		@GET
-		@Produces(MediaType.APPLICATION_XML)
+		@Produces(MediaType.TEXT_HTML)
 		public String viewByID(@PathParam("id") int id) {
 			Document doc = Documents.getInstance().find(id);
 			String tags = "";
@@ -188,7 +188,7 @@ public class SearchableDocumentArchive {
 		
 		@Path("view/{id}")
 		@GET
-		@Produces(MediaType.TEXT_XML)
+		@Produces(MediaType.APPLICATION_XML)
 		public String viewByIDXML(@PathParam("id") int id) {
 			Document doc = Documents.getInstance().find(id);
 			String tags = "";
@@ -201,6 +201,7 @@ public class SearchableDocumentArchive {
 			}
 			return "<document><name>"+doc.getName()+"</name><url>"+doc.getUrl()+"</url><text>"+doc.getText()+"</text>"+tags+"</document> ";
 		}
+		
 		@Path("reset")
 		@GET
 		@Produces(MediaType.TEXT_HTML)
