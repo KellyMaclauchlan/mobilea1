@@ -171,6 +171,7 @@ public class MyCrawler extends WebCrawler {
           for( Element e : para){
              body.add(e.text());
              tags.add(e.text());
+             tags.addAll(new HashSet<String>(Arrays.asList((e.text().split(" ")))));
           }
           Elements heads = doc.select("h0, h1, h2, h3, h4");
           for( Element e : heads){
