@@ -453,13 +453,11 @@ public class SearchableDocumentArchive {
 		@Produces(MediaType.TEXT_HTML)
 		public String profSearch(@PathParam("terms") String terms) {
 			String content = "<h1>"+name+"</h1><h2>Search Results</h2>";
-			try {
+			//try {
 				String[] termarr = terms.split("\\+");
 				System.out.println(termarr);
 				ArrayList<Document> docs = Documents.getInstance().searchForDocs(new ArrayList<String>(Arrays.asList(termarr)), true);
-				if(docs.isEmpty()){
-					content = "No documents";
-				}
+				
 				for(Document page: docs) {
 				     //res.add((String) el);
 					content += "<h3>"+page.getUrl()+"</h3><p>"+page.getText()+"</p>";
@@ -473,11 +471,11 @@ public class SearchableDocumentArchive {
 					
 					content += "<br/>";
 				}
-			} catch (Exception e) {
+			/*} catch (Exception e) {
 				// TODO Auto-generated catch block
 				content = "error";
 				e.printStackTrace();
-			}
+			}*/
 			return "<html> " + "<title>" + "local search" + "</title>" + "<body><h1>" + content
 					+ "</body></h1>" + "</html> ";
 		}
@@ -498,7 +496,6 @@ public class SearchableDocumentArchive {
 			}		
 			docs.addAll(sr.getDocs());	
 			
-			try {
 				if(docs.isEmpty()){
 					content = "No documents";
 				}
@@ -514,11 +511,6 @@ public class SearchableDocumentArchive {
 					
 					content += "<br/>";
 				}
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				content = "error";
-				e.printStackTrace();
-			}
 			return "<html> " + "<title>" + "local search" + "</title>" + "<body><h1>" + content
 					+ "</body></h1>" + "</html> ";
 		}
