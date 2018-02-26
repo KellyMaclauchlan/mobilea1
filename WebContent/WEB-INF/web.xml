@@ -21,7 +21,7 @@
   </context-param>
   <context-param>
     <param-name>sda.url</param-name>
-    <param-value>http://108.162.166.70:8080/COMP4601-SDA/rest/sda/</param-value>
+    <param-value>http://192.168.1.5:8080/COMP4601-SDA/rest/sda/</param-value>
   </context-param>
   <listener>
     <listener-class>edu.carleton.comp4601.utility.SDAContextClass</listener-class>
