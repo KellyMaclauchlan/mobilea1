@@ -199,7 +199,45 @@ public class SearchableDocumentArchive {
 			}
 			return "<document><name>"+doc.getName()+"</name><url>"+doc.getUrl()+"</url><text>"+doc.getText()+"</text>"+tags+"</document> ";
 		}
-		
+		@Path("reset")
+		@GET
+		@Produces(MediaType.TEXT_HTML)
+		public String reset() {
+			System.out.println("HERE 1");
+			String names="";
+			ArrayList<Document> docs=(ArrayList<Document>) Documents.getInstance().getDocs().values();
+			 		for(Document doc :docs){
+							//Documents.getInstance().close(d.getId());
+			 			
+			//Document doc = Documents.getInstance().find(id);
+			if(doc != null){
+				names+=doc.getName()+", ";
+				System.out.println("HERE 2");
+				MongoClient mongoClient;
+				try {
+					mongoClient = new MongoClient("localhost", 27017);
+					DB database = mongoClient.getDB("aone");
+					DBCollection pageCollection = database.getCollection("pages");
+					BasicDBObject query = new BasicDBObject();
+					query.put("url", doc.getUrl());
+					System.out.println("HERE 3");
+					pageCollection.remove(query);
+						
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				System.out.println("HERE 5");
+				Documents.getInstance().close(doc.getId());
+				System.out.println("HERE 6");
+				
+			}
+			 		}
+			 		return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + name
+							+ "</h1><h3>Deleted documents all documents their names were: "+names+"</h3></body>" + "</html> ";
+			
+//			return "<html> " + "<title>" + "crawl is done" + "</title>" + "<body><h1>" + name
+//					+ "</h1><h3>No matching docs</h3></body>" + "</html> ";
+		}
 		@Path("delete/{tags}")
 		@DELETE
 		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
