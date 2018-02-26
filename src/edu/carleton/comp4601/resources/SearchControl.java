@@ -110,6 +110,8 @@ public class SearchControl {
 		tf3.setBoost((float) (1+page.getPageRank()));
 		luceneDoc.add(tf3);	//want to search body
 		
+		
+		System.out.println(page.getTitle());
 		TextField tf4 = new TextField("title", page.getTitle(), Field.Store.YES);
 		tf4.setBoost((float) (1+page.getPageRank()));
 		luceneDoc.add(tf4);	//want to search body
@@ -186,6 +188,7 @@ public class SearchControl {
 		tf3.setBoost(1);
 		luceneDoc.add(tf3);	//want to search body
 		
+		System.out.println(page.get("name"));
 		TextField tf4 = new TextField("title", page.get("name").toString(), Field.Store.YES);
 		tf4.setBoost(1);
 		luceneDoc.add(tf4);	//want to search body
@@ -262,7 +265,7 @@ public class SearchControl {
 			    System.out.println("query: " + searchString);
 			    Query q = new QueryParser("contents", analyzer).parse(searchString+"*");
 			 
-				TopDocs	results	= searcher.search(q, 5); //make 200 later
+				TopDocs	results	= searcher.search(q, 200); //make 200 later
 				System.out.println("RES: " + results.totalHits);
 				ScoreDoc[] hits	= results.scoreDocs;
 				for	(ScoreDoc hit: hits) {	
@@ -412,6 +415,7 @@ public class SearchControl {
 						CrawledPage page = new CrawledPage((String)res.get("url"), (int) res.get("textLength"), (int) res.get("htmlLength"), (int) res.get("outGoingLinks"), links, (String) res.get("text"), (String)res.get("html"));
 						page.setDocId(res.getObjectId("_id").toString());
 						page.setPageRank(pageRank.getValue());
+						System.out.println((String)res.get("name"));
 						page.setTitle((String)res.get("name"));
 						pages.add(page);
 					}

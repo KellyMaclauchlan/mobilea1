@@ -17,11 +17,11 @@
   <context-param>
     <description>Search engine description the registry</description>
     <param-name>sda.description</param-name>
-    <param-value>Prof. White's SDA Engine</param-value>
+    <param-value>Our search engine</param-value>
   </context-param>
   <context-param>
     <param-name>sda.url</param-name>
-    <param-value>http://108.162.166.70:8080/COMP4601-SDA/rest/sda/</param-value>
+    <param-value>http://10.0.1.200:8080/COMP4601-SDA/rest/sda/</param-value>
   </context-param>
   <listener>
     <listener-class>edu.carleton.comp4601.utility.SDAContextClass</listener-class>
