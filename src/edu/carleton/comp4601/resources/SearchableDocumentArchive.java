@@ -55,8 +55,8 @@ public class SearchableDocumentArchive {
 
 		public SearchableDocumentArchive() {
 			name = "COMP4601 Searchable Document Archive V2.1: Brittny Lapierre and Kelly Maclauchlan";
-			ServiceRegistrar.register(name, "http://sikaman.dyndns.org:8080/COMP4601-Directory/rest/directory", SDAConstants.COMP4601SDA, "Kelly and Brittny Search");
-			ServiceRegistrar.unregister(name);
+			//ServiceRegistrar.register(name, "http://sikaman.dyndns.org:8080/COMP4601-Directory/rest/directory", SDAConstants.COMP4601SDA, "Kelly and Brittny Search");
+			//ServiceRegistrar.unregister(name);
 			ServiceRegistrar.register(name, "http://192.168.1.5:8080/COMP4601-SDA/rest/sda/", SDAConstants.COMP4601SDA, "Kelly and Brittny Search");
 			//register
 			//put in call to db to get accounts and put into the list 
